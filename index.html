@@ -321,14 +321,32 @@
 
             try {
                 const token = await getToken();
+                if (!token) return;
+
                 const response = await fetch(`${graphBaseUrl}/tables/TableauClients/rows`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("Graph API Error:", errorData);
+                    showToast(`Erreur Graph (${response.status}): ${errorData.error.message}`, "error");
+                    listContainer.innerHTML = `<div class="col-span-full p-8 text-center text-rose-500 bg-rose-50 rounded-2xl border border-rose-100 font-medium">
+                        Impossible de charger les données.<br>
+                        <span class="text-xs opacity-75">${errorData.error.message}</span>
+                    </div>`;
+                    return;
+                }
+
                 const data = await response.json();
 
                 if (data.value) {
                     select.innerHTML = '<option value="">Choisir un client...</option>';
                     listContainer.innerHTML = '';
+
+                    if (data.value.length === 0) {
+                        listContainer.innerHTML = `<p class="col-span-full p-8 text-center text-slate-400">Aucun client trouvé dans le tableau "TableauClients".</p>`;
+                    }
 
                     data.value.forEach(row => {
                         const val = row.values[0];
@@ -354,7 +372,8 @@
                     });
                 }
             } catch (err) {
-                showToast("Erreur : Impossible de charger les clients", "error");
+                console.error("Fetch Error:", err);
+                showToast("Erreur de connexion : " + err.message, "error");
             }
         }
 
@@ -362,26 +381,38 @@
             const tableBody = document.getElementById("production-table-body");
             try {
                 const token = await getToken();
+                if (!token) return;
+
                 const response = await fetch(`${graphBaseUrl}/tables/TableauProduction/rows`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("Graph API Error (Prod):", errorData);
+                    return; // Silent error for production tab to avoid toast spam
+                }
+
                 const data = await response.json();
 
                 if (data.value) {
                     tableBody.innerHTML = '';
+                    if (data.value.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="3" class="px-6 py-8 text-center text-slate-400 italic">Aucune donnée de production</td></tr>';
+                    }
                     data.value.slice(-10).reverse().forEach(row => { // Show last 10
                         const val = row.values[0];
                         const tr = document.createElement("tr");
                         tr.innerHTML = `
-                        <td class="px-6 py-4 font-bold text-slate-800">${val[0] || '-'}</td>
-                        <td class="px-6 py-4 text-slate-600">${val[1] || '-'}</td>
-                        <td class="px-6 py-4 font-black text-blue-600">${val[2] || '0'} kg</td>
-                    `;
+                            <td class="px-6 py-4 font-bold text-slate-800">${val[0] || '-'}</td>
+                            <td class="px-6 py-4 text-slate-600">${val[1] || '-'}</td>
+                            <td class="px-6 py-4 font-black text-blue-600">${val[2] || '0'} kg</td>
+                        `;
                         tableBody.appendChild(tr);
                     });
                 }
             } catch (err) {
-                showToast("Erreur : Impossible de charger la production", "error");
+                console.error("Fetch Error (Prod):", err);
             }
         }
 
