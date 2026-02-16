@@ -379,7 +379,7 @@
                 const token = await getToken();
                 if (!token) return;
 
-                const response = await fetch(`${resolvedGraphBaseUrl}/tables/TableauClients/rows`, {
+                const response = await fetch(`${resolvedGraphBaseUrl}/tables/T_Clients/rows`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
@@ -395,7 +395,7 @@
                     showToast(`Erreur Graph (${response.status}): ${errorData.error.message}`, "error");
                     listContainer.innerHTML = `<div class="col-span-full p-8 text-center text-rose-500 bg-white rounded-2xl border border-rose-100 font-medium shadow-sm">
                         <div class="text-lg mb-2">⚠️ Tableau non trouvé</div>
-                        Le tableau "TableauClients" est introuvable dans le fichier.${extraInfo}
+                        Le tableau "T_Clients" est introuvable dans le fichier.${extraInfo}
                     </div>`;
                     return;
                 }
@@ -446,7 +446,7 @@
                 const token = await getToken();
                 if (!token) return;
 
-                const response = await fetch(`${resolvedGraphBaseUrl}/tables/TableauProduction/rows`, {
+                const response = await fetch(`${resolvedGraphBaseUrl}/tables/T_Production/rows`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
@@ -501,7 +501,7 @@
                     ]]
                 };
 
-                const res = await fetch(`${resolvedGraphBaseUrl}/tables/TableauRamasses/rows`, {
+                const res = await fetch(`${resolvedGraphBaseUrl}/tables/T_Ramasses/rows`, {
                     method: "POST",
                     headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
