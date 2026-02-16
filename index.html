@@ -302,28 +302,41 @@
                 const siteRes = await fetch(`https://graph.microsoft.com/v1.0/sites/${SITE_PATH}`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
-                if (!siteRes.ok) throw new Error("Impossible de trouver le site SharePoint");
+                if (!siteRes.ok) throw new Error("Impossible de trouver le site SharePoint. Vérifiez l'URL de base.");
                 const siteData = await siteRes.json();
 
-                // 2. Build Base Workbook URL with proper encoding
-                // Don't encode the entire path at once, slashes must remain as separators
-                const encodedPath = FILE_PATH.split('/').map(s => encodeURIComponent(s)).join('/');
-                resolvedGraphBaseUrl = `https://graph.microsoft.com/v1.0/sites/${siteData.id}/drive/root:${encodedPath}:/workbook`;
-                console.log("Graph URL résolue:", resolvedGraphBaseUrl);
+                // 2. Search for the file in the site (more robust than path)
+                const fileName = FILE_PATH.split('/').pop();
+                const searchRes = await fetch(`https://graph.microsoft.com/v1.0/sites/${siteData.id}/drive/root/search(q='${fileName}')`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
 
-                // 3. Test Workbook connection & list tables (debug)
+                if (!searchRes.ok) throw new Error("Erreur lors de la recherche du fichier Excel");
+
+                const searchData = await searchRes.json();
+                const file = searchData.value.find(item => item.name === fileName);
+
+                if (!file) {
+                    throw new Error(`Le fichier "${fileName}" est introuvable sur le site SharePoint. Vérifiez qu'il est bien dans "Documents".`);
+                }
+
+                // 3. Build Base Workbook URL using File ID
+                resolvedGraphBaseUrl = `https://graph.microsoft.com/v1.0/sites/${siteData.id}/drive/items/${file.id}/workbook`;
+                console.log("Graph URL résolue via ID:", resolvedGraphBaseUrl);
+
+                // 4. Test connection & list tables (debug)
                 const tablesRes = await fetch(`${resolvedGraphBaseUrl}/tables`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
                 if (tablesRes.ok) {
                     const tablesData = await tablesRes.json();
-                    console.log("Tables disponibles:", tablesData.value.map(t => t.name));
+                    console.log("Tables disponibles détectées:", tablesData.value.map(t => t.name));
                 } else {
-                    console.warn("Impossible de lister les tables. Le fichier est-il un classeur Excel valide ?");
+                    console.warn("Fichier trouvé mais impossible d'accéder aux tableaux. Vérifiez que c'est un fichier Excel (.xlsx) valide.");
                 }
             } catch (err) {
                 console.error("Resolution Error:", err);
-                showToast("Erreur de configuration SharePoint : " + err.message, "error");
+                showToast("Erreur SharePoint : " + err.message, "error");
             }
         }
 
