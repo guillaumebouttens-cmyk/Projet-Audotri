@@ -228,8 +228,9 @@
             scopes: ["User.Read", "Files.ReadWrite.All", "Sites.Read.All"]
         };
 
-        // Path: gbsconseil.sharepoint.com:/sites/Audotri:/drive/root:/Application/BDD%20ACI.xlsx
-        const graphBaseUrl = "https://graph.microsoft.com/v1.0/sites/gbsconseil.sharepoint.com:/sites/Audotri:/drive/root:/Application/BDD%20ACI.xlsx:/workbook";
+        const SITE_PATH = "gbsconseil.sharepoint.com:/sites/Audotri";
+        const FILE_PATH = "/Application/BDD ACI.xlsx";
+        let resolvedGraphBaseUrl = null;
 
         const myMSALObj = new msal.PublicClientApplication(msalConfig);
 
@@ -241,12 +242,12 @@
                 // Check if account exists
                 const accounts = myMSALObj.getAllAccounts();
                 if (accounts.length > 0) {
-                    handleUserAccount(accounts[0]);
+                    await handleUserAccount(accounts[0]);
                 } else {
                     // Try Silent SSO
                     try {
                         const silentRes = await myMSALObj.ssoSilent(loginRequest);
-                        handleUserAccount(silentRes.account);
+                        await handleUserAccount(silentRes.account);
                     } catch (err) {
                         console.warn("SSO Silent failed:", err);
                         showLoginUI();
@@ -263,7 +264,7 @@
         async function signIn() {
             try {
                 const loginResponse = await myMSALObj.loginPopup(loginRequest);
-                handleUserAccount(loginResponse.account);
+                await handleUserAccount(loginResponse.account);
             } catch (error) {
                 if (error.errorCode !== "user_cancelled") {
                     showToast("Erreur d'authentification", "error");
@@ -287,8 +288,30 @@
             // Default Date to Today
             document.getElementById("input-date").valueAsDate = new Date();
 
+            // Resolve Site ID first
+            await resolveSiteAndWorkbook();
+
             // Load Initial Data
             loadDashboard();
+        }
+
+        async function resolveSiteAndWorkbook() {
+            try {
+                const token = await getToken();
+                // 1. Get Site ID
+                const siteRes = await fetch(`https://graph.microsoft.com/v1.0/sites/${SITE_PATH}`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (!siteRes.ok) throw new Error("Impossible de trouver le site SharePoint");
+                const siteData = await siteRes.json();
+
+                // 2. Build Base Workbook URL
+                resolvedGraphBaseUrl = `https://graph.microsoft.com/v1.0/sites/${siteData.id}/drive/root:${encodeURIComponent(FILE_PATH)}:/workbook`;
+                console.log("Graph URL résolue:", resolvedGraphBaseUrl);
+            } catch (err) {
+                console.error("Resolution Error:", err);
+                showToast("Erreur de configuration SharePoint : " + err.message, "error");
+            }
         }
 
         function showLoginUI() {
@@ -312,10 +335,12 @@
          * DATA OPERATIONS
          */
         async function loadDashboard() {
+            if (!resolvedGraphBaseUrl) return;
             await Promise.all([getClients(), getProduction()]);
         }
 
         async function getClients() {
+            if (!resolvedGraphBaseUrl) return;
             const select = document.getElementById("client-select");
             const listContainer = document.getElementById("clients-list");
 
@@ -323,7 +348,7 @@
                 const token = await getToken();
                 if (!token) return;
 
-                const response = await fetch(`${graphBaseUrl}/tables/TableauClients/rows`, {
+                const response = await fetch(`${resolvedGraphBaseUrl}/tables/TableauClients/rows`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
@@ -378,12 +403,13 @@
         }
 
         async function getProduction() {
+            if (!resolvedGraphBaseUrl) return;
             const tableBody = document.getElementById("production-table-body");
             try {
                 const token = await getToken();
                 if (!token) return;
 
-                const response = await fetch(`${graphBaseUrl}/tables/TableauProduction/rows`, {
+                const response = await fetch(`${resolvedGraphBaseUrl}/tables/TableauProduction/rows`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
@@ -418,9 +444,10 @@
 
         async function addRamasse(e) {
             e.preventDefault();
+            if (!resolvedGraphBaseUrl) return;
             const btn = document.getElementById("submit-btn");
             const form = e.target;
-            const data = new FormData(form);
+            const formData = new FormData(form);
 
             btn.disabled = true;
             btn.innerHTML = `<div class="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>`;
@@ -430,14 +457,14 @@
                 const payload = {
                     values: [[
                         "", // Placeholder for Auto-index or N° if applicable
-                        data.get("date"),
-                        data.get("client"),
-                        data.get("famille"),
-                        parseFloat(data.get("quantite"))
+                        formData.get("date"),
+                        formData.get("client"),
+                        formData.get("famille"),
+                        parseFloat(formData.get("quantite"))
                     ]]
                 };
 
-                const res = await fetch(`${graphBaseUrl}/tables/TableauRamasses/rows`, {
+                const res = await fetch(`${resolvedGraphBaseUrl}/tables/TableauRamasses/rows`, {
                     method: "POST",
                     headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
@@ -450,10 +477,11 @@
                     switchTab('tab-production');
                     getProduction();
                 } else {
-                    throw new Error("Erreur de transmission");
+                    const errDetail = await res.json();
+                    throw new Error(errDetail.error.message || "Erreur de transmission");
                 }
             } catch (err) {
-                showToast("Erreur lors de l'enregistrement", "error");
+                showToast("Erreur lors de l'enregistrement: " + err.message, "error");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<span>Valider la ramasse</span><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>`;
