@@ -336,6 +336,15 @@
 
                     // Store available tables for reference
                     window.availableTables = tableNames;
+
+                    // 4. Diagnostic: Check T_Ramasses columns count
+                    const colsRes = await fetch(`${resolvedGraphBaseUrl}/tables/T_Ramasses/columns`, {
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    if (colsRes.ok) {
+                        const colsData = await colsRes.json();
+                        console.log("T_Ramasses possède " + colsData.value.length + " colonnes.");
+                    }
                 } else {
                     console.warn("Fichier trouvé mais impossible d'accéder aux tableaux. Vérifiez que c'est un fichier Excel (.xlsx) valide.");
                 }
