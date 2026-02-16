@@ -305,9 +305,22 @@
                 if (!siteRes.ok) throw new Error("Impossible de trouver le site SharePoint");
                 const siteData = await siteRes.json();
 
-                // 2. Build Base Workbook URL
-                resolvedGraphBaseUrl = `https://graph.microsoft.com/v1.0/sites/${siteData.id}/drive/root:${encodeURIComponent(FILE_PATH)}:/workbook`;
+                // 2. Build Base Workbook URL with proper encoding
+                // Don't encode the entire path at once, slashes must remain as separators
+                const encodedPath = FILE_PATH.split('/').map(s => encodeURIComponent(s)).join('/');
+                resolvedGraphBaseUrl = `https://graph.microsoft.com/v1.0/sites/${siteData.id}/drive/root:${encodedPath}:/workbook`;
                 console.log("Graph URL résolue:", resolvedGraphBaseUrl);
+
+                // 3. Test Workbook connection & list tables (debug)
+                const tablesRes = await fetch(`${resolvedGraphBaseUrl}/tables`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (tablesRes.ok) {
+                    const tablesData = await tablesRes.json();
+                    console.log("Tables disponibles:", tablesData.value.map(t => t.name));
+                } else {
+                    console.warn("Impossible de lister les tables. Le fichier est-il un classeur Excel valide ?");
+                }
             } catch (err) {
                 console.error("Resolution Error:", err);
                 showToast("Erreur de configuration SharePoint : " + err.message, "error");
