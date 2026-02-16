@@ -502,11 +502,14 @@
                 const token = await getToken();
                 const payload = {
                     values: [[
-                        "", // Placeholder for Auto-index or N° if applicable
-                        formData.get("date"),
-                        formData.get("client"),
-                        formData.get("famille"),
-                        parseFloat(formData.get("quantite"))
+                        "", // Colonne 1 : N° Ramasse (Laisser vide si auto-calculé par Excel)
+                        formData.get("date"), // Colonne 2 : Date
+                        formData.get("famille"), // Colonne 3 : Famille matière
+                        formData.get("client"), // Colonne 4 : Client
+                        parseFloat(formData.get("quantite")), // Colonne 5 : Quantité
+                        1, // Colonne 6 : Nombre de déplacements (Par défaut 1)
+                        0, // Colonne 7 : nb BB (Par défaut 0)
+                        0  // Colonne 8 : nb BB PSE (Par défaut 0)
                     ]]
                 };
 
