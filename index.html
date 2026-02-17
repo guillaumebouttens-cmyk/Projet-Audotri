@@ -132,6 +132,9 @@
                     class="pb-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-all whitespace-nowrap">Départs</button>
                 <button onclick="switchTab('tab-incidents')" id="btn-incidents"
                     class="pb-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-all whitespace-nowrap">Incidents</button>
+                <button onclick="switchTab('tab-semaine')" id="btn-semaine"
+                    class="pb-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-all whitespace-nowrap">Semaine
+                    type</button>
                 <button onclick="switchTab('tab-parametres')" id="btn-parametres"
                     class="pb-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-all whitespace-nowrap">Paramètres</button>
             </div>
@@ -308,6 +311,57 @@
                         </thead>
                         <tbody id="table-body-incidents" class="divide-y divide-slate-50 text-sm"></tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- TAB: Semaine Type (Calendar) -->
+            <div id="tab-semaine" class="tab-pane hidden space-y-6">
+                <div class="flex justify-between items-center px-2">
+                    <h2 class="text-xl font-black text-slate-900">Agenda Semaine Type</h2>
+                    <button onclick="openModal('T_SmnType')"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Nouveau créneau
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-[32px] shadow-sm ring-1 ring-slate-100 overflow-hidden relative">
+                    <!-- Calendar Header (Days) -->
+                    <div class="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr] border-b border-slate-100 bg-slate-50/50">
+                        <div class="p-4 border-r border-slate-100"></div>
+                        <div
+                            class="p-4 text-center border-r border-slate-100 font-black text-xs uppercase tracking-widest text-slate-500">
+                            Lundi</div>
+                        <div
+                            class="p-4 text-center border-r border-slate-100 font-black text-xs uppercase tracking-widest text-slate-500">
+                            Mardi</div>
+                        <div
+                            class="p-4 text-center border-r border-slate-100 font-black text-xs uppercase tracking-widest text-slate-500">
+                            Mercredi</div>
+                        <div
+                            class="p-4 text-center border-r border-slate-100 font-black text-xs uppercase tracking-widest text-slate-500">
+                            Jeudi</div>
+                        <div class="p-4 text-center font-black text-xs uppercase tracking-widest text-slate-500">
+                            Vendredi
+                        </div>
+                    </div>
+
+                    <!-- Calendar Grid -->
+                    <div class="relative h-[600px] overflow-y-auto overflow-x-hidden no-scrollbar">
+                        <!-- Time Scale & Background Lines -->
+                        <div id="calendar-grid-body"
+                            class="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr] h-[1100px] relative">
+                            <!-- JS will inject lines and hours -->
+                        </div>
+                        <!-- Entries Layer -->
+                        <div id="calendar-entries-layer"
+                            class="absolute top-0 left-[80px] right-0 h-[1100px] pointer-events-none">
+                            <!-- JS will inject entry cards here -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -570,6 +624,19 @@
                     { name: 'Type de poste', type: 'text' },
                     { name: 'Actif', type: 'text' }
                 ]
+            },
+            'T_SmnType': {
+                title: 'Semaine Type',
+                idPrefix: 'ST',
+                cols: [
+                    { name: 'Index', type: 'number', readonly: true },
+                    { name: 'Jour', type: 'select', options: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'] },
+                    { name: 'Heure', type: 'text', placeholder: 'HH:MM' },
+                    { name: 'N° Client', type: 'number', readonly: true },
+                    { name: 'Client', type: 'select', optionsTable: 'T_Clients', optionLabelIndex: 1 },
+                    { name: 'Matière collect', type: 'select', optionsTable: 'T_MP', optionLabelIndex: 1 },
+                    { name: 'ordre', type: 'number', default: 1 }
+                ]
             }
         };
 
@@ -692,7 +759,12 @@
                 if (!res.ok) throw new Error("Erreur lors de la récupération des données.");
                 const data = await res.json();
                 cachedData[tableName] = data.value;
-                renderTable(tableName, data.value);
+
+                if (tableName === 'T_SmnType') {
+                    renderCalendar(data.value);
+                } else {
+                    renderTable(tableName, data.value);
+                }
             } catch (err) {
                 console.error(err);
                 showToast(`Erreur (${tableName}): ` + err.message, "error");
@@ -770,9 +842,74 @@
         }
 
         /**
+         * CALENDAR LOGIC
+         */
+        function renderCalendar(rows) {
+            const gridBody = document.getElementById("calendar-grid-body");
+            const entriesLayer = document.getElementById("calendar-entries-layer");
+            if (!gridBody || !entriesLayer) return;
+
+            gridBody.innerHTML = '';
+            entriesLayer.innerHTML = '';
+
+            // Render Time Scale (8h to 20h)
+            for (let h = 7; h <= 19; h++) {
+                const hourDiv = document.createElement("div");
+                hourDiv.className = "flex items-center justify-center border-r border-b border-slate-100 text-[10px] font-bold text-slate-400 bg-slate-50/30";
+                hourDiv.innerText = `${h}:00`;
+                gridBody.appendChild(hourDiv);
+
+                // Add horizontal lines across days
+                for (let d = 0; d < 5; d++) {
+                    const slot = document.createElement("div");
+                    slot.className = "border-r border-b border-slate-50 cursor-crosshair hover:bg-blue-50/30 transition-colors";
+                    slot.onclick = () => openModal('T_SmnType', null, { day: d, hour: h });
+                    gridBody.appendChild(slot);
+                }
+            }
+
+            // Render Entries
+            rows.forEach((row, idx) => {
+                const vals = row.values[0];
+                const dayStr = vals[1]; // Lundi, Mardi...
+                const timeStr = vals[2]; // HH:MM
+                const client = vals[4];
+                const matière = vals[5];
+
+                const dayIdx = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'].indexOf(dayStr);
+                if (dayIdx === -1) return;
+
+                const [h, m] = timeStr.split(':').map(Number);
+                if (isNaN(h)) return;
+
+                // Position calculation (80px is hour width, each hour is 1/13 of grid height if 7-20)
+                // Grid Body has 13 rows (7 to 19 inclusive). Height per hour = 1100 / 13
+                const top = ((h - 7) * 60 + (m || 0)) * (1100 / (13 * 60));
+                const left = (dayIdx * 20) + '%'; // 5 days = 20% each
+                const width = '20%';
+
+                const card = document.createElement("div");
+                card.className = "absolute p-1 pointer-events-auto cursor-pointer group";
+                card.style.top = `${top}px`;
+                card.style.left = left;
+                card.style.width = width;
+                card.style.zIndex = 20;
+
+                card.innerHTML = `
+                    <div onclick="openModal('T_SmnType', ${idx})" class="h-full bg-blue-50 border-l-4 border-blue-500 rounded-lg p-2 shadow-sm group-hover:shadow-md transition-all">
+                        <p class="text-[9px] font-black text-blue-600 truncate">${timeStr}</p>
+                        <p class="text-[10px] font-bold text-slate-800 leading-tight line-clamp-2">${client}</p>
+                        <p class="text-[9px] font-medium text-blue-400 truncate mt-1">${matière}</p>
+                    </div>
+                `;
+                entriesLayer.appendChild(card);
+            });
+        }
+
+        /**
          * MODAL LOGIC
          */
-        async function openModal(tableName, rowIndex = null) {
+        async function openModal(tableName, rowIndex = null, prefill = null) {
             const config = TABLE_CONFIG[tableName];
             currentModalState = { tableName, rowIndex, data: rowIndex !== null ? cachedData[tableName][rowIndex].values[0] : null };
 
@@ -786,6 +923,12 @@
                 const col = config.cols[i];
                 let val = currentModalState.data ? currentModalState.data[i] : (col.default !== undefined ? col.default : '');
 
+                // Prefill from calendar click
+                if (prefill && tableName === 'T_SmnType') {
+                    if (col.name === 'Jour') val = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'][prefill.day];
+                    if (col.name === 'Heure') val = `${String(prefill.hour).padStart(2, '0')}:00`;
+                }
+
                 const wrapper = document.createElement("div");
                 wrapper.className = "space-y-2";
 
@@ -798,6 +941,11 @@
                                 <input type="checkbox" name="col_${i}" ${isChecked ? 'checked' : ''} class="w-5 h-5 text-blue-600 rounded-lg border-slate-300 focus:ring-blue-500">
                                 <span class="text-sm font-bold text-slate-600">Activé / Vrai</span>
                              </div>`;
+                } else if (col.options) {
+                    // Manual options
+                    input = `<select name="col_${i}" class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700">
+                                ${col.options.map(o => `<option value="${o}" ${o === val ? 'selected' : ''}>${o}</option>`).join('')}
+                             </select>`;
                 } else if (col.type === 'select') {
                     input = `<select name="col_${i}" class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700">
                                 <option value="">Chargement...</option>
@@ -817,7 +965,7 @@
                     }
                     input = `<input type="date" name="col_${i}" value="${dateStr}" class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700">`;
                 } else {
-                    input = `<input type="${col.type}" name="col_${i}" value="${val}" ${col.readonly ? 'readonly' : ''} class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700 ${col.readonly ? 'opacity-50' : ''}">`;
+                    input = `<input type="${col.type}" name="col_${i}" value="${val}" ${col.readonly ? 'readonly' : ''} placeholder="${col.placeholder || ''}" class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700 ${col.readonly ? 'opacity-50' : ''}">`;
                 }
 
                 wrapper.innerHTML = label + input;
@@ -876,6 +1024,14 @@
                         const ids = rows.map(r => parseInt(r.values[0][0])).filter(id => !isNaN(id));
                         val = ids.length > 0 ? Math.max(...ids) + 1 : 1;
                         if (tableName === 'T_Ramasses' && ids.length === 0) val = 104000;
+                    }
+
+                    // Specific mapping for ST : client name to client ID
+                    if (tableName === 'T_SmnType' && col.name === 'N° Client') {
+                        const clientName = fd.get('col_4');
+                        const clientRows = cachedData['T_Clients'] || [];
+                        const client = clientRows.find(r => r.values[0][1] === clientName);
+                        val = client ? client.values[0][0] : 0;
                     }
 
                     values.push(val);
