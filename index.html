@@ -972,7 +972,7 @@
                 form.appendChild(wrapper);
 
                 // Populate selects
-                if (col.type === 'select') {
+                if (col.type === 'select' && col.optionsTable) {
                     const select = wrapper.querySelector('select');
                     populateSelect(select, col.optionsTable, col.optionLabelIndex, val);
                 }
@@ -982,6 +982,7 @@
         }
 
         async function populateSelect(select, tableName, labelIdx, selectedVal) {
+            if (!tableName) return;
             if (!cachedData[tableName]) await loadTableData(tableName);
             const rows = cachedData[tableName] || [];
             select.innerHTML = '<option value="">Choisir...</option>';
