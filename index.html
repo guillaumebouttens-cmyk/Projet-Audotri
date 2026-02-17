@@ -132,6 +132,8 @@
                     class="pb-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-all whitespace-nowrap">Départs</button>
                 <button onclick="switchTab('tab-incidents')" id="btn-incidents"
                     class="pb-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-all whitespace-nowrap">Incidents</button>
+                <button onclick="switchTab('tab-parametres')" id="btn-parametres"
+                    class="pb-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-all whitespace-nowrap">Paramètres</button>
             </div>
 
             <!-- TAB: Ramasses -->
@@ -308,6 +310,88 @@
                     </table>
                 </div>
             </div>
+
+            <!-- TAB: Paramètres -->
+            <div id="tab-parametres" class="tab-pane hidden space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="switchSettingsTable('T_MP')" id="btn-setting-mp"
+                            class="px-4 py-2 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-md shadow-blue-100 transition-all">Familles
+                            MP</button>
+                        <button onclick="switchSettingsTable('T_ProduitsFinis')" id="btn-setting-produitsfinis"
+                            class="px-4 py-2 rounded-xl text-sm font-bold bg-white text-slate-400 hover:text-slate-600 transition-all">Produits
+                            Finis</button>
+                        <button onclick="switchSettingsTable('T_Employés')" id="btn-setting-employes"
+                            class="px-4 py-2 rounded-xl text-sm font-bold bg-white text-slate-400 hover:text-slate-600 transition-all">Employés</button>
+                    </div>
+                </div>
+
+                <div id="settings-mp" class="settings-pane space-y-4">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <h2 class="text-xl font-black text-slate-900">Familles de Matières</h2>
+                        <button onclick="openModal('T_MP')"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Ajouter
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="sticky-thead border-b border-slate-100">
+                                <tr id="table-head-mp"></tr>
+                            </thead>
+                            <tbody id="table-body-mp" class="divide-y divide-slate-50 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="settings-produitsfinis" class="settings-pane hidden space-y-4">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <h2 class="text-xl font-black text-slate-900">Produits Finis</h2>
+                        <button onclick="openModal('T_ProduitsFinis')"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Ajouter
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="sticky-thead border-b border-slate-100">
+                                <tr id="table-head-produitsfinis"></tr>
+                            </thead>
+                            <tbody id="table-body-produitsfinis" class="divide-y divide-slate-50 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="settings-employes" class="settings-pane hidden space-y-4">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <h2 class="text-xl font-black text-slate-900">Employés</h2>
+                        <button onclick="openModal('T_Employés')"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Ajouter
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="sticky-thead border-b border-slate-100">
+                                <tr id="table-head-employes"></tr>
+                            </thead>
+                            <tbody id="table-body-employes" class="divide-y divide-slate-50 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -457,6 +541,35 @@
                     { name: 'Type de remontée', type: 'text' },
                     { name: 'Commentaires', type: 'textarea' }
                 ]
+            },
+            'T_MP': {
+                title: 'Familles de Matières',
+                idPrefix: 'MP',
+                cols: [
+                    { name: 'N° Famille matière', type: 'number', readonly: true },
+                    { name: 'Famille', type: 'text' }
+                ]
+            },
+            'T_ProduitsFinis': {
+                title: 'Produits Finis',
+                idPrefix: 'PF',
+                cols: [
+                    { name: 'N° Produit', type: 'number', readonly: true },
+                    { name: 'Produit', type: 'text' },
+                    { name: 'Famille matière', type: 'select', optionsTable: 'T_MP', optionLabelIndex: 1 },
+                    { name: 'Prix de vente', type: 'number' },
+                    { name: 'tva', type: 'number' }
+                ]
+            },
+            'T_Employés': {
+                title: 'Employés',
+                idPrefix: 'EM',
+                cols: [
+                    { name: 'N° Collab', type: 'number', readonly: true },
+                    { name: 'Collaborateur', type: 'text' },
+                    { name: 'Type de poste', type: 'text' },
+                    { name: 'Actif', type: 'text' }
+                ]
             }
         };
 
@@ -588,7 +701,7 @@
 
         function renderTable(tableName, rows) {
             const config = TABLE_CONFIG[tableName];
-            const suffix = (tableName === 'T_Départs' ? 'departs' : tableName.split('_')[1].toLowerCase());
+            const suffix = (tableName === 'T_Départs' ? 'departs' : normalizeStr(tableName.split('_')[1]));
             const head = document.getElementById(`table-head-${suffix}`);
             const body = document.getElementById(`table-body-${suffix}`);
 
@@ -844,6 +957,28 @@
             const suffix = tabId.split('-')[1]; // clients, ramasses...
             const tableName = Object.keys(TABLE_CONFIG).find(k => normalizeStr(k).includes(suffix));
             if (tableName) loadTableData(tableName);
+
+            if (tabId === 'tab-parametres') {
+                switchSettingsTable('T_MP');
+            }
+        }
+
+        function switchSettingsTable(tableName) {
+            document.querySelectorAll('.settings-pane').forEach(p => p.classList.add('hidden'));
+            const suffix = tableName.split('_')[1].toLowerCase();
+            document.getElementById(`settings-${suffix}`).classList.remove('hidden');
+
+            document.querySelectorAll('button[id^="btn-setting-"]').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white', 'shadow-md', 'shadow-blue-100');
+                b.classList.add('bg-white', 'text-slate-400');
+            });
+            const btnId = `btn-setting-${suffix}`;
+            if (document.getElementById(btnId)) {
+                document.getElementById(btnId).classList.add('bg-blue-600', 'text-white', 'shadow-md', 'shadow-blue-100');
+                document.getElementById(btnId).classList.remove('bg-white', 'text-slate-400');
+            }
+
+            loadTableData(tableName);
         }
 
         function showToast(msg, type) {
