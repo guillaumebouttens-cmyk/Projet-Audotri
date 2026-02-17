@@ -37,14 +37,26 @@
 
         .table-container {
             max-height: calc(100vh - 280px);
-            overflow: auto;
+            overflow-y: auto;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
-        th {
+        table {
+            min-width: 800px;
+            /* Minimum width to prevent column squeezing */
+        }
+
+        /* Prevent shrinking for T_Clients specifically which is wider */
+        #tab-clients table {
+            min-width: 1500px;
+        }
+
+        .sticky-thead th {
             position: sticky;
             top: 0;
-            z-index: 10;
             background: #f8fafc;
+            z-index: 10;
         }
     </style>
 </head>
@@ -124,20 +136,32 @@
 
             <!-- TAB: Ramasses -->
             <div id="tab-ramasses" class="tab-pane space-y-6">
-                <div class="flex justify-between items-center px-2">
-                    <h2 class="text-xl font-black text-slate-900 leading-tight">Gestion des Ramasses</h2>
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
+                    <div class="flex items-center gap-4 w-full md:w-auto">
+                        <h2 class="text-xl font-black text-slate-900 whitespace-nowrap">Suivi des Ramasses</h2>
+                        <div class="relative w-full md:w-64">
+                            <input type="text" placeholder="Rechercher..."
+                                onkeyup="filterTable('T_Ramasses', this.value)"
+                                class="w-full bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-xl px-10 py-2 text-sm font-semibold outline-none transition-all">
+                            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
                     <button onclick="openModal('T_Ramasses')"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                        class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
-                        Nouvelle
+                        Ramasse
                     </button>
                 </div>
-                <div class="bg-white rounded-3xl overflow-hidden shadow-sm ring-1 ring-slate-100 table-container">
+                <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
                     <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 border-b border-slate-100">
+                        <thead class="sticky-thead border-b border-slate-100">
                             <tr id="table-head-ramasses"></tr>
                         </thead>
                         <tbody id="table-body-ramasses" class="divide-y divide-slate-50 text-sm"></tbody>
@@ -147,10 +171,22 @@
 
             <!-- TAB: Clients -->
             <div id="tab-clients" class="tab-pane hidden space-y-4">
-                <div class="flex justify-between items-center px-2">
-                    <h2 class="text-xl font-black text-slate-900 leading-tight">Base Clients</h2>
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
+                    <div class="flex items-center gap-4 w-full md:w-auto">
+                        <h2 class="text-xl font-black text-slate-900">Base Clients</h2>
+                        <div class="relative w-full md:w-64">
+                            <input type="text" placeholder="Rechercher..."
+                                onkeyup="filterTable('T_Clients', this.value)"
+                                class="w-full bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-xl px-10 py-2 text-sm font-semibold outline-none transition-all">
+                            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
                     <button onclick="openModal('T_Clients')"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                        class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -158,9 +194,9 @@
                         Client
                     </button>
                 </div>
-                <div class="bg-white rounded-3xl overflow-hidden shadow-sm ring-1 ring-slate-100 table-container">
+                <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
                     <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 border-b border-slate-100">
+                        <thead class="sticky-thead border-b border-slate-100">
                             <tr id="table-head-clients"></tr>
                         </thead>
                         <tbody id="table-body-clients" class="divide-y divide-slate-50 text-sm"></tbody>
@@ -170,10 +206,22 @@
 
             <!-- TAB: Production -->
             <div id="tab-production" class="tab-pane hidden space-y-4">
-                <div class="flex justify-between items-center px-2">
-                    <h2 class="text-xl font-black text-slate-900">Suivi Production</h2>
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
+                    <div class="flex items-center gap-4 w-full md:w-auto">
+                        <h2 class="text-xl font-black text-slate-900">Suivi Production</h2>
+                        <div class="relative w-full md:w-64">
+                            <input type="text" placeholder="Rechercher..."
+                                onkeyup="filterTable('T_Production', this.value)"
+                                class="w-full bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-xl px-10 py-2 text-sm font-semibold outline-none transition-all">
+                            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
                     <button onclick="openModal('T_Production')"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                        class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -181,9 +229,9 @@
                         Balle
                     </button>
                 </div>
-                <div class="bg-white rounded-3xl overflow-hidden shadow-sm ring-1 ring-slate-100 table-container">
+                <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
                     <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 border-b border-slate-100">
+                        <thead class="sticky-thead border-b border-slate-100">
                             <tr id="table-head-production"></tr>
                         </thead>
                         <tbody id="table-body-production" class="divide-y divide-slate-50 text-sm"></tbody>
@@ -193,10 +241,22 @@
 
             <!-- TAB: Départs -->
             <div id="tab-departs" class="tab-pane hidden space-y-4">
-                <div class="flex justify-between items-center px-2">
-                    <h2 class="text-xl font-black text-slate-900">Suivi des Départs</h2>
-                    <button onclick="openModal('T_Departs')"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
+                    <div class="flex items-center gap-4 w-full md:w-auto">
+                        <h2 class="text-xl font-black text-slate-900">Suivi des Départs</h2>
+                        <div class="relative w-full md:w-64">
+                            <input type="text" placeholder="Rechercher..."
+                                onkeyup="filterTable('T_Départs', this.value)"
+                                class="w-full bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-xl px-10 py-2 text-sm font-semibold outline-none transition-all">
+                            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <button onclick="openModal('T_Départs')"
+                        class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -204,9 +264,9 @@
                         Départ
                     </button>
                 </div>
-                <div class="bg-white rounded-3xl overflow-hidden shadow-sm ring-1 ring-slate-100 table-container">
+                <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
                     <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 border-b border-slate-100">
+                        <thead class="sticky-thead border-b border-slate-100">
                             <tr id="table-head-departs"></tr>
                         </thead>
                         <tbody id="table-body-departs" class="divide-y divide-slate-50 text-sm"></tbody>
@@ -216,10 +276,22 @@
 
             <!-- TAB: Incidents -->
             <div id="tab-incidents" class="tab-pane hidden space-y-4">
-                <div class="flex justify-between items-center px-2">
-                    <h2 class="text-xl font-black text-slate-900">Suivi des Incidents</h2>
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
+                    <div class="flex items-center gap-4 w-full md:w-auto">
+                        <h2 class="text-xl font-black text-slate-900">Suivi des Incidents</h2>
+                        <div class="relative w-full md:w-64">
+                            <input type="text" placeholder="Rechercher..."
+                                onkeyup="filterTable('T_Incidents', this.value)"
+                                class="w-full bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-xl px-10 py-2 text-sm font-semibold outline-none transition-all">
+                            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
                     <button onclick="openModal('T_Incidents')"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                        class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -227,9 +299,9 @@
                         Incident
                     </button>
                 </div>
-                <div class="bg-white rounded-3xl overflow-hidden shadow-sm ring-1 ring-slate-100 table-container">
+                <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
                     <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 border-b border-slate-100">
+                        <thead class="sticky-thead border-b border-slate-100">
                             <tr id="table-head-incidents"></tr>
                         </thead>
                         <tbody id="table-body-incidents" class="divide-y divide-slate-50 text-sm"></tbody>
@@ -361,7 +433,7 @@
                     { name: 'N°inventaire', type: 'number', default: 0 }
                 ]
             },
-            'T_Departs': {
+            'T_Départs': {
                 title: 'Départs',
                 idPrefix: 'DE',
                 cols: [
@@ -464,6 +536,13 @@
             }
         }
 
+        /**
+         * UTILS
+         */
+        function normalizeStr(str) {
+            return String(str).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
         async function getToken() {
             const accounts = myMSALObj.getAllAccounts();
             if (accounts.length === 0) return null;
@@ -509,7 +588,7 @@
 
         function renderTable(tableName, rows) {
             const config = TABLE_CONFIG[tableName];
-            const suffix = tableName.split('_')[1].toLowerCase();
+            const suffix = (tableName === 'T_Départs' ? 'departs' : tableName.split('_')[1].toLowerCase());
             const head = document.getElementById(`table-head-${suffix}`);
             const body = document.getElementById(`table-body-${suffix}`);
 
@@ -517,8 +596,8 @@
 
             // Header
             head.innerHTML = config.cols.map(c => `
-                <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter">${c.name}</th>
-            `).join('') + '<th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter text-right">Actions</th>';
+                <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter whitespace-nowrap">${c.name}</th>
+            `).join('') + '<th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter text-right sticky right-0 bg-slate-50/90 backdrop-blur shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">Actions</th>';
 
             // Body
             body.innerHTML = '';
@@ -527,14 +606,15 @@
                 return;
             }
 
-            // Show last 50 rows for performance, reversed
+            // We only render filtered or limited rows, but they are already cached.
+            // Let's use filterTable logic or just render all (reversed)
             const displayRows = [...rows].reverse().slice(0, 50);
 
             displayRows.forEach((row, idx) => {
                 const originalIdx = rows.length - 1 - idx;
                 const vals = row.values[0];
                 const tr = document.createElement("tr");
-                tr.className = "hover:bg-slate-50/50 transition-colors";
+                tr.className = "hover:bg-slate-50/50 transition-colors group";
 
                 let cellsContent = config.cols.map((col, cIdx) => {
                     let val = vals[cIdx] || '';
@@ -554,13 +634,26 @@
                 }).join('');
 
                 tr.innerHTML = cellsContent + `
-                    <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                    <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap sticky right-0 bg-white/90 backdrop-blur group-hover:bg-slate-50/95 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">
                         <button onclick="openModal('${tableName}', ${originalIdx})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
                         <button onclick="deleteEntry('${tableName}', ${originalIdx})" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                     </td>
                 `;
                 body.appendChild(tr);
             });
+        }
+
+        function filterTable(tableName, query) {
+            const rows = cachedData[tableName] || [];
+            if (!query) return renderTable(tableName, rows);
+
+            const q = normalizeStr(query);
+            const filtered = rows.filter(r => {
+                return r.values[0].some(val =>
+                    normalizeStr(val).includes(q)
+                );
+            });
+            renderTable(tableName, filtered);
         }
 
         /**
@@ -750,12 +843,14 @@
                 b.classList.add('text-slate-400');
             });
             const btnId = 'btn-' + tabId.split('-')[1];
-            document.getElementById(btnId).classList.add('tab-active');
-            document.getElementById(btnId).classList.remove('text-slate-400');
+            if (document.getElementById(btnId)) {
+                document.getElementById(btnId).classList.add('tab-active');
+                document.getElementById(btnId).classList.remove('text-slate-400');
+            }
 
             // Load data for the new tab
             const suffix = tabId.split('-')[1]; // clients, ramasses...
-            const tableName = Object.keys(TABLE_CONFIG).find(k => k.toLowerCase().includes(suffix));
+            const tableName = Object.keys(TABLE_CONFIG).find(k => normalizeStr(k).includes(suffix));
             if (tableName) loadTableData(tableName);
         }
 
