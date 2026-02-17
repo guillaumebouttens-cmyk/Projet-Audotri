@@ -20,6 +20,32 @@
             border-bottom: 3px solid #2563eb;
             color: #1e40af;
         }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .modal-overlay {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        .table-container {
+            max-height: calc(100vh - 280px);
+            overflow: auto;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #f8fafc;
+        }
     </style>
 </head>
 
@@ -83,122 +109,130 @@
         <div id="app-content" class="hidden space-y-6">
 
             <!-- Tabs Menu -->
-            <div class="flex border-b border-gray-200 gap-8 overflow-x-auto no-scrollbar">
-                <button onclick="switchTab('tab-saisie')" id="btn-saisie"
-                    class="pb-4 text-sm font-bold transition-all tab-active whitespace-nowrap">Saisie
-                    Ramasse</button>
+            <div class="flex border-b border-gray-200 gap-6 overflow-x-auto no-scrollbar pb-0.5">
+                <button onclick="switchTab('tab-ramasses')" id="btn-ramasses"
+                    class="pb-4 text-sm font-bold transition-all tab-active whitespace-nowrap">Ramasses</button>
                 <button onclick="switchTab('tab-clients')" id="btn-clients"
                     class="pb-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-all whitespace-nowrap">Clients</button>
                 <button onclick="switchTab('tab-production')" id="btn-production"
                     class="pb-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-all whitespace-nowrap">Production</button>
+                <button onclick="switchTab('tab-departs')" id="btn-departs"
+                    class="pb-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-all whitespace-nowrap">Départs</button>
+                <button onclick="switchTab('tab-incidents')" id="btn-incidents"
+                    class="pb-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-all whitespace-nowrap">Incidents</button>
             </div>
 
-            <!-- TAB: Saisie -->
-            <div id="tab-saisie" class="tab-pane space-y-6">
-                <section class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/50">
-                    <div class="flex items-center gap-3 mb-8">
-                        <div
-                            class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <h2 class="text-2xl font-black text-slate-900">Nouvelle Ramasse</h2>
-                            <p class="text-sm text-slate-500">Saisie chauffeur - Temps réel</p>
-                        </div>
-                    </div>
-
-                    <form id="ramasse-form" onsubmit="addRamasse(event)" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label
-                                    class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1">Client</label>
-                                <select id="client-select" name="client" required
-                                    class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 transition-all outline-none text-slate-700 font-semibold appearance-none">
-                                    <option value="">Chargement des clients...</option>
-                                </select>
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1">Famille
-                                    Matière</label>
-                                <input type="text" name="famille" required
-                                    class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 transition-all outline-none placeholder:text-slate-300 font-semibold"
-                                    placeholder="Ex: Carton, Plastique...">
-                            </div>
-                            <div class="space-y-2">
-                                <label
-                                    class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1">Date</label>
-                                <input type="date" id="input-date" name="date" required
-                                    class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 transition-all outline-none font-semibold">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs font-black uppercase text-slate-400 tracking-widest pl-1">Quantité
-                                    (kg/u)</label>
-                                <input type="number" step="0.01" name="quantite" required
-                                    class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 transition-all outline-none font-semibold text-lg"
-                                    placeholder="0.00">
-                            </div>
-                        </div>
-                        <button type="submit" id="submit-btn"
-                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-3xl shadow-xl shadow-blue-200 transition-all active:scale-[0.98] flex justify-center items-center gap-3 text-lg">
-                            <span>Valider la ramasse</span>
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
-                    </form>
-                </section>
+            <!-- TAB: Ramasses -->
+            <div id="tab-ramasses" class="tab-pane space-y-6">
+                <div class="flex justify-between items-center px-2">
+                    <h2 class="text-xl font-black text-slate-900 leading-tight">Gestion des Ramasses</h2>
+                    <button onclick="openModal('T_Ramasses')"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Nouvelle
+                    </button>
+                </div>
+                <div class="bg-white rounded-3xl overflow-hidden shadow-sm ring-1 ring-slate-100 table-container">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-100">
+                            <tr id="table-head-ramasses"></tr>
+                        </thead>
+                        <tbody id="table-body-ramasses" class="divide-y divide-slate-50 text-sm"></tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- TAB: Clients -->
             <div id="tab-clients" class="tab-pane hidden space-y-4">
                 <div class="flex justify-between items-center px-2">
-                    <h2 class="text-xl font-bold text-slate-900">Base Clients</h2>
-                    <button onclick="getClients()" class="text-blue-600 text-sm font-bold flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                            </path>
+                    <h2 class="text-xl font-black text-slate-900 leading-tight">Base Clients</h2>
+                    <button onclick="openModal('T_Clients')"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
-                        Rafraîchir
+                        Client
                     </button>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="clients-list">
-                    <!-- Cards injected here -->
+                <div class="bg-white rounded-3xl overflow-hidden shadow-sm ring-1 ring-slate-100 table-container">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-100">
+                            <tr id="table-head-clients"></tr>
+                        </thead>
+                        <tbody id="table-body-clients" class="divide-y divide-slate-50 text-sm"></tbody>
+                    </table>
                 </div>
             </div>
 
             <!-- TAB: Production -->
             <div id="tab-production" class="tab-pane hidden space-y-4">
                 <div class="flex justify-between items-center px-2">
-                    <h2 class="text-xl font-bold text-slate-900">Suivi Production</h2>
-                    <button onclick="getProduction()" class="text-blue-600 text-sm font-bold flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                            </path>
+                    <h2 class="text-xl font-black text-slate-900">Suivi Production</h2>
+                    <button onclick="openModal('T_Production')"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
-                        Rafraîchir
+                        Balle
                     </button>
                 </div>
-                <div class="bg-white rounded-3xl overflow-hidden shadow-sm ring-1 ring-slate-100">
-                    <table class="w-full text-left">
+                <div class="bg-white rounded-3xl overflow-hidden shadow-sm ring-1 ring-slate-100 table-container">
+                    <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-50 border-b border-slate-100">
-                            <tr>
-                                <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter">
-                                    Balle</th>
-                                <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter">
-                                    Produit</th>
-                                <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter">
-                                    Poids</th>
-                            </tr>
+                            <tr id="table-head-production"></tr>
                         </thead>
-                        <tbody id="production-table-body" class="divide-y divide-slate-50 text-sm">
-                            <!-- Rows injected here -->
-                        </tbody>
+                        <tbody id="table-body-production" class="divide-y divide-slate-50 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: Départs -->
+            <div id="tab-departs" class="tab-pane hidden space-y-4">
+                <div class="flex justify-between items-center px-2">
+                    <h2 class="text-xl font-black text-slate-900">Suivi des Départs</h2>
+                    <button onclick="openModal('T_Departs')"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Départ
+                    </button>
+                </div>
+                <div class="bg-white rounded-3xl overflow-hidden shadow-sm ring-1 ring-slate-100 table-container">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-100">
+                            <tr id="table-head-departs"></tr>
+                        </thead>
+                        <tbody id="table-body-departs" class="divide-y divide-slate-50 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: Incidents -->
+            <div id="tab-incidents" class="tab-pane hidden space-y-4">
+                <div class="flex justify-between items-center px-2">
+                    <h2 class="text-xl font-black text-slate-900">Suivi des Incidents</h2>
+                    <button onclick="openModal('T_Incidents')"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Incident
+                    </button>
+                </div>
+                <div class="bg-white rounded-3xl overflow-hidden shadow-sm ring-1 ring-slate-100 table-container">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-100">
+                            <tr id="table-head-incidents"></tr>
+                        </thead>
+                        <tbody id="table-body-incidents" class="divide-y divide-slate-50 text-sm"></tbody>
                     </table>
                 </div>
             </div>
@@ -207,6 +241,46 @@
 
     <!-- Toasts Container -->
     <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-[200] space-y-3">
+    </div>
+
+    <!-- CRUD MODAL -->
+    <div id="crud-modal" class="hidden fixed inset-0 z-[150] flex items-center justify-center p-4">
+        <div class="modal-overlay absolute inset-0" onclick="closeModal()"></div>
+        <div
+            class="bg-white w-full max-w-2xl rounded-[32px] shadow-2xl relative z-10 flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+            <!-- Modal Header -->
+            <div class="p-8 border-b border-slate-50 flex justify-between items-center">
+                <div>
+                    <h2 id="modal-title" class="text-2xl font-black text-slate-900">Modifier l'entrée</h2>
+                    <p id="modal-subtitle" class="text-sm text-slate-400 font-bold uppercase tracking-wider">T_Ramasses
+                    </p>
+                </div>
+                <button onclick="closeModal()"
+                    class="p-3 hover:bg-slate-50 rounded-2xl transition-colors text-slate-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <!-- Modal Body (Dynamic Form) -->
+            <div id="modal-body" class="p-8 overflow-y-auto space-y-6">
+                <form id="dynamic-form" class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
+                    <!-- Fields injected here -->
+                </form>
+            </div>
+            <!-- Modal Footer -->
+            <div class="p-8 bg-slate-50/50 flex gap-4">
+                <button onclick="closeModal()"
+                    class="flex-1 px-8 py-4 bg-white hover:bg-slate-100 text-slate-600 font-black rounded-2xl border border-slate-200 transition-all active:scale-95">
+                    Annuler
+                </button>
+                <button id="modal-save-btn" onclick="saveEntry()"
+                    class="flex-[2] px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-xl shadow-blue-100 transition-all active:scale-95 flex justify-center items-center gap-2">
+                    Enregistrer
+                </button>
+            </div>
+        </div>
     </div>
 
     <script shadow-dom="false">
@@ -236,16 +310,96 @@
         const myMSALObj = new msal.PublicClientApplication(msalConfig);
 
         /**
+         * CRUD CONFIGURATION
+         */
+        const TABLE_CONFIG = {
+            'T_Clients': {
+                title: 'Clients',
+                idPrefix: 'CL',
+                cols: [
+                    { name: 'N° Client', type: 'number', readonly: true },
+                    { name: 'Client', type: 'text' },
+                    { name: 'Groupe', type: 'text' },
+                    { name: 'Adresse1', type: 'text' },
+                    { name: 'Adresse2', type: 'text' },
+                    { name: 'CP', type: 'text' },
+                    { name: 'Localité', type: 'text' },
+                    { name: 'Téléphone', type: 'text' },
+                    { name: 'Adresse mail', type: 'text' },
+                    { name: 'Contrat', type: 'checkbox' },
+                    { name: 'Ramasse lundi', type: 'checkbox' },
+                    { name: 'Ramasse mardi', type: 'checkbox' },
+                    { name: 'Ramasse mercredi', type: 'checkbox' },
+                    { name: 'Ramasse jeudi', type: 'checkbox' },
+                    { name: 'Ramasse vendredi', type: 'checkbox' }
+                ]
+            },
+            'T_Ramasses': {
+                title: 'Ramasses',
+                idPrefix: 'RA',
+                cols: [
+                    { name: 'N° Ramas', type: 'number', readonly: true },
+                    { name: 'Date', type: 'date' },
+                    { name: 'Famille matière', type: 'text' },
+                    { name: 'Client', type: 'select', optionsTable: 'T_Clients', optionLabelIndex: 1 },
+                    { name: 'Quantité', type: 'number' },
+                    { name: 'Nombre de déplacements', type: 'number', default: 1 },
+                    { name: 'nb BB', type: 'number', default: 0 },
+                    { name: 'nb BB PSE', type: 'number', default: 0 }
+                ]
+            },
+            'T_Production': {
+                title: 'Production',
+                idPrefix: 'PR',
+                cols: [
+                    { name: 'N° Balle', type: 'number', readonly: true },
+                    { name: 'Produit', type: 'text' },
+                    { name: 'Poids', type: 'number' },
+                    { name: 'Date', type: 'date' },
+                    { name: 'N°société', type: 'text', default: 'Audotri' },
+                    { name: 'N° Départ', type: 'number' },
+                    { name: 'N°inventaire', type: 'number', default: 0 }
+                ]
+            },
+            'T_Departs': {
+                title: 'Départs',
+                idPrefix: 'DE',
+                cols: [
+                    { name: 'N° Départ', type: 'number', readonly: true },
+                    { name: 'Date', type: 'date' },
+                    { name: 'Nombre de b...', type: 'number' },
+                    { name: 'Poids', type: 'number' },
+                    { name: 'Produit', type: 'text' },
+                    { name: 'Montant', type: 'number', default: 0 }
+                ]
+            },
+            'T_Incidents': {
+                title: 'Incidents',
+                idPrefix: 'IN',
+                cols: [
+                    { name: 'N° Incident', type: 'number', readonly: true },
+                    { name: 'Date', type: 'date' },
+                    { name: 'N° Client', type: 'number' },
+                    { name: 'Client', type: 'select', optionsTable: 'T_Clients', optionLabelIndex: 1 },
+                    { name: 'Retours MP', type: 'checkbox' },
+                    { name: 'Type de remontée', type: 'text' },
+                    { name: 'Commentaires', type: 'textarea' }
+                ]
+            }
+        };
+
+        let currentModalState = { tableName: null, rowIndex: null, data: null };
+        let cachedData = {};
+
+        /**
          * AUTH & SSO SILENT
          */
         async function initAuth() {
             try {
-                // Check if account exists
                 const accounts = myMSALObj.getAllAccounts();
                 if (accounts.length > 0) {
                     await handleUserAccount(accounts[0]);
                 } else {
-                    // Try Silent SSO
                     try {
                         const silentRes = await myMSALObj.ssoSilent(loginRequest);
                         await handleUserAccount(silentRes.account);
@@ -267,16 +421,12 @@
                 const loginResponse = await myMSALObj.loginPopup(loginRequest);
                 await handleUserAccount(loginResponse.account);
             } catch (error) {
-                if (error.errorCode !== "user_cancelled") {
-                    showToast("Erreur d'authentification", "error");
-                }
+                if (error.errorCode !== "user_cancelled") showToast("Erreur d'authentification", "error");
             }
         }
 
         function signOut() {
-            const logoutRequest = {
-                account: myMSALObj.getAllAccounts()[0]
-            };
+            const logoutRequest = { account: myMSALObj.getAllAccounts()[0] };
             myMSALObj.logoutPopup(logoutRequest);
         }
 
@@ -286,77 +436,32 @@
             document.getElementById("login-btn").classList.add("hidden");
             document.getElementById("app-content").classList.remove("hidden");
 
-            // Default Date to Today
-            document.getElementById("input-date").valueAsDate = new Date();
-
-            // Resolve Site ID first
             await resolveSiteAndWorkbook();
-
-            // Load Initial Data
             loadDashboard();
         }
 
         async function resolveSiteAndWorkbook() {
             try {
                 const token = await getToken();
-                // 1. Get Site ID
                 const siteRes = await fetch(`https://graph.microsoft.com/v1.0/sites/${SITE_PATH}`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
-                if (!siteRes.ok) throw new Error("Impossible de trouver le site SharePoint. Vérifiez l'URL de base.");
+                if (!siteRes.ok) throw new Error("Site introuvable.");
                 const siteData = await siteRes.json();
 
-                // 2. Search for the file in the site (more robust than path)
                 const fileName = FILE_PATH.split('/').pop();
                 const searchRes = await fetch(`https://graph.microsoft.com/v1.0/sites/${siteData.id}/drive/root/search(q='${fileName}')`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
-
-                if (!searchRes.ok) throw new Error("Erreur lors de la recherche du fichier Excel");
-
                 const searchData = await searchRes.json();
                 const file = searchData.value.find(item => item.name === fileName);
+                if (!file) throw new Error(`Le fichier "${fileName}" est introuvable.`);
 
-                if (!file) {
-                    throw new Error(`Le fichier "${fileName}" est introuvable sur le site SharePoint. Vérifiez qu'il est bien dans "Documents".`);
-                }
-
-                // 3. Build Base Workbook URL using File ID
                 resolvedGraphBaseUrl = `https://graph.microsoft.com/v1.0/sites/${siteData.id}/drive/items/${file.id}/workbook`;
-                console.log("Graph URL résolue via ID:", resolvedGraphBaseUrl);
-
-                // 4. Test connection & list tables (debug)
-                const tablesRes = await fetch(`${resolvedGraphBaseUrl}/tables`, {
-                    headers: { "Authorization": `Bearer ${token}` }
-                });
-                if (tablesRes.ok) {
-                    const tablesData = await tablesRes.json();
-                    const tableNames = tablesData.value.map(t => t.name);
-                    console.log("Tables disponibles détectées:", tableNames);
-
-                    // Store available tables for reference
-                    window.availableTables = tableNames;
-
-                    // 4. Diagnostic: Check T_Ramasses columns count
-                    const colsRes = await fetch(`${resolvedGraphBaseUrl}/tables/T_Ramasses/columns`, {
-                        headers: { "Authorization": `Bearer ${token}` }
-                    });
-                    if (colsRes.ok) {
-                        const colsData = await colsRes.json();
-                        console.log("T_Ramasses possède " + colsData.value.length + " colonnes.");
-                    }
-                } else {
-                    console.warn("Fichier trouvé mais impossible d'accéder aux tableaux. Vérifiez que c'est un fichier Excel (.xlsx) valide.");
-                }
+                console.log("Graph URL:", resolvedGraphBaseUrl);
             } catch (err) {
-                console.error("Resolution Error:", err);
-                showToast("Erreur SharePoint : " + err.message, "error");
+                showToast("Erreur SharePoint: " + err.message, "error");
             }
-        }
-
-        function showLoginUI() {
-            document.getElementById("login-btn").classList.remove("hidden");
-            document.getElementById("loading-overlay").classList.add("hidden");
         }
 
         async function getToken() {
@@ -372,204 +477,264 @@
         }
 
         /**
-         * DATA OPERATIONS
+         * DATA CORE
          */
         async function loadDashboard() {
             if (!resolvedGraphBaseUrl) return;
-            await Promise.all([getClients(), getProduction()]);
-        }
-
-        async function getClients() {
-            if (!resolvedGraphBaseUrl) return;
-            const select = document.getElementById("client-select");
-            const listContainer = document.getElementById("clients-list");
-
-            try {
-                const token = await getToken();
-                if (!token) return;
-
-                const response = await fetch(`${resolvedGraphBaseUrl}/tables/T_Clients/rows`, {
-                    headers: { "Authorization": `Bearer ${token}` }
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error("Graph API Error:", errorData);
-
-                    let extraInfo = "";
-                    if (window.availableTables) {
-                        extraInfo = `<br><span class="text-[10px] text-slate-500">Tableaux trouvés dans Excel : ${window.availableTables.join(', ')}</span>`;
-                    }
-
-                    showToast(`Erreur Graph (${response.status}): ${errorData.error.message}`, "error");
-                    listContainer.innerHTML = `<div class="col-span-full p-8 text-center text-rose-500 bg-white rounded-2xl border border-rose-100 font-medium shadow-sm">
-                        <div class="text-lg mb-2">⚠️ Tableau non trouvé</div>
-                        Le tableau "T_Clients" est introuvable dans le fichier.${extraInfo}
-                    </div>`;
-                    return;
-                }
-
-                const data = await response.json();
-
-                if (data.value) {
-                    select.innerHTML = '<option value="">Choisir un client...</option>';
-                    listContainer.innerHTML = '';
-
-                    if (data.value.length === 0) {
-                        listContainer.innerHTML = `<p class="col-span-full p-8 text-center text-slate-400">Aucun client trouvé dans le tableau "TableauClients".</p>`;
-                    }
-
-                    data.value.forEach(row => {
-                        const val = row.values[0];
-                        // Dropdown
-                        const opt = document.createElement("option");
-                        opt.value = val[1]; opt.textContent = val[1];
-                        select.appendChild(opt);
-
-                        // Card
-                        const card = document.createElement("div");
-                        card.className = "bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex items-center justify-between";
-                        card.innerHTML = `
-                        <div>
-                            <p class="text-xs font-bold text-slate-400 uppercase leading-none mb-1">${val[0] || '-'}</p>
-                            <p class="font-black text-slate-900">${val[1] || '-'}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">Localité</p>
-                            <p class="text-sm font-semibold">${val[2] || '-'}</p>
-                        </div>
-                    `;
-                        listContainer.appendChild(card);
-                    });
-                }
-            } catch (err) {
-                console.error("Fetch Error:", err);
-                showToast("Erreur de connexion : " + err.message, "error");
+            // Load the current tab
+            const activeTab = document.querySelector('.tab-pane:not(.hidden)');
+            if (activeTab) {
+                const suffix = activeTab.id.split('-')[1]; // e.g. "ramasses"
+                const tableName = Object.keys(TABLE_CONFIG).find(k => k.toLowerCase().includes(suffix));
+                if (tableName) loadTableData(tableName);
             }
         }
 
-        async function getProduction() {
+        async function loadTableData(tableName) {
             if (!resolvedGraphBaseUrl) return;
-            const tableBody = document.getElementById("production-table-body");
             try {
                 const token = await getToken();
-                if (!token) return;
-
-                const response = await fetch(`${resolvedGraphBaseUrl}/tables/T_Production/rows`, {
+                const res = await fetch(`${resolvedGraphBaseUrl}/tables/${tableName}/rows`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error("Graph API Error (Prod):", errorData);
-                    return; // Silent error for production tab to avoid toast spam
-                }
-
-                const data = await response.json();
-
-                if (data.value) {
-                    tableBody.innerHTML = '';
-                    if (data.value.length === 0) {
-                        tableBody.innerHTML = '<tr><td colspan="3" class="px-6 py-8 text-center text-slate-400 italic">Aucune donnée de production</td></tr>';
-                    }
-                    data.value.slice(-10).reverse().forEach(row => { // Show last 10
-                        const val = row.values[0];
-                        const tr = document.createElement("tr");
-                        tr.innerHTML = `
-                            <td class="px-6 py-4 font-bold text-slate-800">${val[0] || '-'}</td>
-                            <td class="px-6 py-4 text-slate-600">${val[1] || '-'}</td>
-                            <td class="px-6 py-4 font-black text-blue-600">${val[2] || '0'} kg</td>
-                        `;
-                        tableBody.appendChild(tr);
-                    });
-                }
+                if (!res.ok) throw new Error("Erreur lors de la récupération des données.");
+                const data = await res.json();
+                cachedData[tableName] = data.value;
+                renderTable(tableName, data.value);
             } catch (err) {
-                console.error("Fetch Error (Prod):", err);
+                console.error(err);
+                showToast(`Erreur (${tableName}): ` + err.message, "error");
             }
         }
 
-        async function getNextRamasseId() {
-            try {
-                const token = await getToken();
-                if (!token) return "";
+        function renderTable(tableName, rows) {
+            const config = TABLE_CONFIG[tableName];
+            const suffix = tableName.split('_')[1].toLowerCase();
+            const head = document.getElementById(`table-head-${suffix}`);
+            const body = document.getElementById(`table-body-${suffix}`);
 
-                // Get only columns to avoid fetching all rows if possible, 
-                // but Graph API table rows don't support $select on individual cells easily.
-                // We'll fetch the rows.
-                const response = await fetch(`${resolvedGraphBaseUrl}/tables/T_Ramasses/rows`, {
-                    headers: { "Authorization": `Bearer ${token}` }
-                });
+            if (!head || !body) return;
 
-                if (!response.ok) return "";
+            // Header
+            head.innerHTML = config.cols.map(c => `
+                <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter">${c.name}</th>
+            `).join('') + '<th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter text-right">Actions</th>';
 
-                const data = await response.json();
-                if (data.value && data.value.length > 0) {
-                    // Find max ID from the first column (index 0) of all rows
-                    // val[0] is "N° Ramas"
-                    const ids = data.value.map(row => {
-                        const val = row.values[0][0];
-                        return parseInt(val);
-                    }).filter(id => !isNaN(id));
-
-                    if (ids.length > 0) {
-                        return Math.max(...ids) + 1;
-                    }
-                }
-                return 104000; // Default fallback starting point
-            } catch (err) {
-                console.error("Error getting next ID:", err);
-                return "";
+            // Body
+            body.innerHTML = '';
+            if (!rows || rows.length === 0) {
+                body.innerHTML = `<tr><td colspan="${config.cols.length + 1}" class="px-6 py-12 text-center text-slate-400 italic">Aucune donnée trouvée</td></tr>`;
+                return;
             }
+
+            // Show last 50 rows for performance, reversed
+            const displayRows = [...rows].reverse().slice(0, 50);
+
+            displayRows.forEach((row, idx) => {
+                const originalIdx = rows.length - 1 - idx;
+                const vals = row.values[0];
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-slate-50/50 transition-colors";
+
+                let cellsContent = config.cols.map((col, cIdx) => {
+                    let val = vals[cIdx] || '';
+                    if (col.type === 'checkbox') {
+                        const isChecked = val === true || val === 'VRAI' || val === 'TRUE';
+                        return `<td class="px-6 py-4"><span class="w-5 h-5 rounded-md flex items-center justify-center ${isChecked ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-300'}">
+                            ${isChecked ? '<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg>' : ''}
+                        </span></td>`;
+                    }
+                    if (col.type === 'date' && val) {
+                        try {
+                            const date = new Date((val - 25569) * 86400 * 1000); // Excel date to JS
+                            val = isNaN(date.getTime()) ? val : date.toLocaleDateString('fr-FR');
+                        } catch (e) { }
+                    }
+                    return `<td class="px-6 py-4 font-medium text-slate-700 whitespace-nowrap">${val}</td>`;
+                }).join('');
+
+                tr.innerHTML = cellsContent + `
+                    <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                        <button onclick="openModal('${tableName}', ${originalIdx})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                        <button onclick="deleteEntry('${tableName}', ${originalIdx})" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
         }
 
-        async function addRamasse(e) {
-            e.preventDefault();
-            if (!resolvedGraphBaseUrl) return;
-            const btn = document.getElementById("submit-btn");
-            const form = e.target;
-            const formData = new FormData(form);
+        /**
+         * MODAL LOGIC
+         */
+        async function openModal(tableName, rowIndex = null) {
+            const config = TABLE_CONFIG[tableName];
+            currentModalState = { tableName, rowIndex, data: rowIndex !== null ? cachedData[tableName][rowIndex].values[0] : null };
+
+            document.getElementById("modal-title").innerText = rowIndex !== null ? "Modifier l'entrée" : "Nouvelle entrée";
+            document.getElementById("modal-subtitle").innerText = config.title;
+
+            const form = document.getElementById("dynamic-form");
+            form.innerHTML = '';
+
+            for (let i = 0; i < config.cols.length; i++) {
+                const col = config.cols[i];
+                let val = currentModalState.data ? currentModalState.data[i] : (col.default !== undefined ? col.default : '');
+
+                const wrapper = document.createElement("div");
+                wrapper.className = "space-y-2";
+
+                const label = `<label class="text-[10px] font-black uppercase text-slate-400 tracking-widest pl-1">${col.name}</label>`;
+                let input = '';
+
+                if (col.type === 'checkbox') {
+                    const isChecked = val === true || val === 'VRAI' || val === 'TRUE';
+                    input = `<div class="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl ring-1 ring-slate-200">
+                                <input type="checkbox" name="col_${i}" ${isChecked ? 'checked' : ''} class="w-5 h-5 text-blue-600 rounded-lg border-slate-300 focus:ring-blue-500">
+                                <span class="text-sm font-bold text-slate-600">Activé / Vrai</span>
+                             </div>`;
+                } else if (col.type === 'select') {
+                    input = `<select name="col_${i}" class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700">
+                                <option value="">Chargement...</option>
+                             </select>`;
+                } else if (col.type === 'textarea') {
+                    input = `<textarea name="col_${i}" rows="3" class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700">${val}</textarea>`;
+                } else if (col.type === 'date') {
+                    // Convert Excel serial to YYYY-MM-DD for input[type=date] if editing
+                    let dateStr = '';
+                    if (val && !isNaN(val)) {
+                        const d = new Date((val - 25569) * 86400 * 1000);
+                        dateStr = d.toISOString().split('T')[0];
+                    } else if (!val && rowIndex === null) {
+                        dateStr = new Date().toISOString().split('T')[0];
+                    } else {
+                        dateStr = val;
+                    }
+                    input = `<input type="date" name="col_${i}" value="${dateStr}" class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700">`;
+                } else {
+                    input = `<input type="${col.type}" name="col_${i}" value="${val}" ${col.readonly ? 'readonly' : ''} class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700 ${col.readonly ? 'opacity-50' : ''}">`;
+                }
+
+                wrapper.innerHTML = label + input;
+                form.appendChild(wrapper);
+
+                // Populate selects
+                if (col.type === 'select') {
+                    const select = wrapper.querySelector('select');
+                    populateSelect(select, col.optionsTable, col.optionLabelIndex, val);
+                }
+            }
+
+            document.getElementById("crud-modal").classList.remove("hidden");
+        }
+
+        async function populateSelect(select, tableName, labelIdx, selectedVal) {
+            if (!cachedData[tableName]) await loadTableData(tableName);
+            const rows = cachedData[tableName] || [];
+            select.innerHTML = '<option value="">Choisir...</option>';
+            rows.forEach(r => {
+                const label = r.values[0][labelIdx];
+                const opt = document.createElement("option");
+                opt.value = label;
+                opt.textContent = label;
+                if (label === selectedVal) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function closeModal() {
+            document.getElementById("crud-modal").classList.add("hidden");
+        }
+
+        async function saveEntry() {
+            const { tableName, rowIndex } = currentModalState;
+            const config = TABLE_CONFIG[tableName];
+            const btn = document.getElementById("modal-save-btn");
+            const form = document.getElementById("dynamic-form");
+            const fd = new FormData(form);
 
             btn.disabled = true;
-            btn.innerHTML = `<div class="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>`;
+            btn.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>`;
 
             try {
                 const token = await getToken();
-                const nextId = await getNextRamasseId();
+                let values = [];
+                for (let i = 0; i < config.cols.length; i++) {
+                    const col = config.cols[i];
+                    let val = fd.get(`col_${i}`);
+                    if (col.type === 'checkbox') val = form.querySelector(`[name="col_${i}"]`).checked;
+                    if (col.type === 'number') val = parseFloat(val) || 0;
 
-                const payload = {
-                    values: [[
-                        nextId, // Colonne 1 : N° Ramasse (Calculé manuellement)
-                        formData.get("date"), // Colonne 2 : Date
-                        formData.get("famille"), // Colonne 3 : Famille matière
-                        formData.get("client"), // Colonne 4 : Client
-                        parseFloat(formData.get("quantite")), // Colonne 5 : Quantité
-                        1, // Colonne 6 : Nombre de déplacements (Par défaut 1)
-                        0, // Colonne 7 : nb BB (Par défaut 0)
-                        0  // Colonne 8 : nb BB PSE (Par défaut 0)
-                    ]]
-                };
+                    // Auto-calc for ID on new entries
+                    if (col.name.includes('N°') && rowIndex === null && i === 0) {
+                        const rows = cachedData[tableName] || [];
+                        const ids = rows.map(r => parseInt(r.values[0][0])).filter(id => !isNaN(id));
+                        val = ids.length > 0 ? Math.max(...ids) + 1 : 1;
+                        if (tableName === 'T_Ramasses' && ids.length === 0) val = 104000;
+                    }
 
-                const res = await fetch(`${resolvedGraphBaseUrl}/tables/T_Ramasses/rows`, {
-                    method: "POST",
-                    headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
+                    values.push(val);
+                }
+
+                let res;
+                if (rowIndex === null) {
+                    // Create
+                    res = await fetch(`${resolvedGraphBaseUrl}/tables/${tableName}/rows`, {
+                        method: "POST",
+                        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({ values: [values] })
+                    });
+                } else {
+                    // Update - Graph API doesn't support easy PATCH for a whole row by index directly without range
+                    // We need to target the specific row range address
+                    const rowAddressRes = await fetch(`${resolvedGraphBaseUrl}/tables/${tableName}/rows/itemAt(index=${rowIndex})`, {
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    const rowData = await rowAddressRes.json();
+                    const rangeAddress = rowData.address.split('!')[1]; // e.g. "A10:O10"
+
+                    res = await fetch(`${resolvedGraphBaseUrl}/worksheets/itemAt(index=0)/range(address='${rangeAddress}')`, {
+                        method: "PATCH",
+                        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({ values: [values] })
+                    });
+                    // Note: This logic assumes worksheet 0.site resolved Workbook is safer.
+                }
 
                 if (res.ok) {
-                    showToast("Ramasse enregistrée avec succès ✅", "success");
-                    form.reset();
-                    document.getElementById("input-date").valueAsDate = new Date();
-                    switchTab('tab-production');
-                    getProduction();
+                    showToast("Enregistré avec succès ✅", "success");
+                    closeModal();
+                    loadTableData(tableName);
                 } else {
-                    const errDetail = await res.json();
-                    throw new Error(errDetail.error.message || "Erreur de transmission");
+                    const err = await res.json();
+                    throw new Error(err.error.message);
                 }
             } catch (err) {
-                showToast("Erreur lors de l'enregistrement: " + err.message, "error");
+                showToast("Erreur: " + err.message, "error");
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `<span>Valider la ramasse</span><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>`;
+                btn.innerHTML = "Enregistrer";
+            }
+        }
+
+        async function deleteEntry(tableName, rowIndex) {
+            if (!confirm("Êtes-vous sûr de vouloir supprimer cette ligne ?")) return;
+            try {
+                const token = await getToken();
+                // Get the range address first to be safe, or use the rows/delete api if available
+                const res = await fetch(`${resolvedGraphBaseUrl}/tables/${tableName}/rows/itemAt(index=${rowIndex})`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (res.status === 204 || res.ok) {
+                    showToast("Supprimé avec succès", "success");
+                    loadTableData(tableName);
+                } else {
+                    const err = await res.json();
+                    throw new Error(err.error.message);
+                }
+            } catch (err) {
+                showToast("Erreur lors de la suppression: " + err.message, "error");
             }
         }
 
@@ -580,13 +745,18 @@
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
             document.getElementById(tabId).classList.remove('hidden');
 
-            // Update UI
             document.querySelectorAll('button[id^="btn-"]').forEach(b => {
                 b.classList.remove('tab-active');
                 b.classList.add('text-slate-400');
             });
-            document.getElementById('btn-' + tabId.split('-')[1]).classList.add('tab-active');
-            document.getElementById('btn-' + tabId.split('-')[1]).classList.remove('text-slate-400');
+            const btnId = 'btn-' + tabId.split('-')[1];
+            document.getElementById(btnId).classList.add('tab-active');
+            document.getElementById(btnId).classList.remove('text-slate-400');
+
+            // Load data for the new tab
+            const suffix = tabId.split('-')[1]; // clients, ramasses...
+            const tableName = Object.keys(TABLE_CONFIG).find(k => k.toLowerCase().includes(suffix));
+            if (tableName) loadTableData(tableName);
         }
 
         function showToast(msg, type) {
@@ -601,11 +771,12 @@
 
         function hideLoading() {
             const overlay = document.getElementById("loading-overlay");
-            overlay.classList.add("opacity-0");
-            setTimeout(() => overlay.remove(), 500);
+            if (overlay) {
+                overlay.classList.add("opacity-0");
+                setTimeout(() => overlay.remove(), 500);
+            }
         }
 
-        // START
         window.onload = initAuth;
     </script>
 </body>
