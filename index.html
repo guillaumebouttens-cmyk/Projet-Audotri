@@ -777,20 +777,12 @@
                         body: JSON.stringify({ values: [values] })
                     });
                 } else {
-                    // Update - Graph API doesn't support easy PATCH for a whole row by index directly without range
-                    // We need to target the specific row range address
-                    const rowAddressRes = await fetch(`${resolvedGraphBaseUrl}/tables/${tableName}/rows/itemAt(index=${rowIndex})`, {
-                        headers: { "Authorization": `Bearer ${token}` }
-                    });
-                    const rowData = await rowAddressRes.json();
-                    const rangeAddress = rowData.address.split('!')[1]; // e.g. "A10:O10"
-
-                    res = await fetch(`${resolvedGraphBaseUrl}/worksheets/itemAt(index=0)/range(address='${rangeAddress}')`, {
+                    // Update - Use direct PATCH on the row index
+                    res = await fetch(`${resolvedGraphBaseUrl}/tables/${tableName}/rows/itemAt(index=${rowIndex})`, {
                         method: "PATCH",
                         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                         body: JSON.stringify({ values: [values] })
                     });
-                    // Note: This logic assumes worksheet 0.site resolved Workbook is safer.
                 }
 
                 if (res.ok) {
