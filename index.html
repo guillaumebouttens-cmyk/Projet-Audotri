@@ -965,7 +965,7 @@
 
         function switchSettingsTable(tableName) {
             document.querySelectorAll('.settings-pane').forEach(p => p.classList.add('hidden'));
-            const suffix = tableName.split('_')[1].toLowerCase();
+            const suffix = normalizeStr(tableName.split('_')[1]);
             document.getElementById(`settings-${suffix}`).classList.remove('hidden');
 
             document.querySelectorAll('button[id^="btn-setting-"]').forEach(b => {
