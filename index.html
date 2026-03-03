@@ -554,6 +554,9 @@
         const FILE_PATH = "/Application/BDD ACI.xlsx";
         let resolvedGraphBaseUrl = null;
         let resolvedDriveBaseUrl = null;
+        let currentModalState = { tableName: null, rowIndex: null, data: null };
+        let cachedData = {};
+        const sortStates = {}; // { tableName: { colIndex: 0, direction: 'asc' } }
 
         const myMSALObj = new msal.PublicClientApplication(msalConfig);
 
@@ -691,8 +694,6 @@
             }
         };
 
-        let currentModalState = { tableName: null, rowIndex: null, data: null };
-        let cachedData = {};
 
         /**
          * AUTH & SSO SILENT
@@ -828,6 +829,11 @@
                 if (tableName === 'T_SmnType') {
                     renderCalendar(cachedData[tableName]);
                 } else {
+                    // Apply current sort if any
+                    const state = sortStates[tableName];
+                    if (state) {
+                        applySort(tableName, state.colIndex, state.direction);
+                    }
                     renderTable(tableName, cachedData[tableName]);
                 }
             } catch (err) {
@@ -845,9 +851,23 @@
             if (!head || !body) return;
 
             // Header
-            head.innerHTML = config.cols.map(c => `
-                <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter whitespace-nowrap">${c.name}</th>
-            `).join('') + '<th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter text-right sticky right-0 bg-slate-50/90 backdrop-blur shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">Actions</th>';
+            const sortState = sortStates[tableName] || {};
+            head.innerHTML = config.cols.map((c, i) => {
+                const isSorted = sortState.colIndex === i;
+                const dir = sortState.direction;
+                const icon = !isSorted ? `<svg class="w-3 h-3 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 10l5-5 5 5M7 14l5 5 5-5"></path></svg>` :
+                    dir === 'asc' ? `<svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7"></path></svg>` :
+                        `<svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>`;
+
+                return `
+                    <th onclick="sortTable('${tableName}', ${i})" class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors group">
+                        <div class="flex items-center gap-2">
+                            ${c.name}
+                            ${icon}
+                        </div>
+                    </th>
+                `;
+            }).join('') + '<th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter text-right sticky right-0 bg-slate-50/90 backdrop-blur shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">Actions</th>';
 
             // Body
             body.innerHTML = '';
@@ -889,6 +909,46 @@
                     </td>
                 `;
                 body.appendChild(tr);
+            });
+        }
+
+        function sortTable(tableName, colIndex) {
+            const currentState = sortStates[tableName] || { colIndex: -1, direction: 'desc' };
+            let direction = 'asc';
+
+            if (currentState.colIndex === colIndex) {
+                direction = currentState.direction === 'asc' ? 'desc' : 'asc';
+            }
+
+            sortStates[tableName] = { colIndex, direction };
+            applySort(tableName, colIndex, direction);
+            renderTable(tableName, cachedData[tableName]);
+        }
+
+        function applySort(tableName, colIndex, direction) {
+            const rows = cachedData[tableName];
+            if (!rows) return;
+
+            rows.sort((a, b) => {
+                let vA = a.values[0][colIndex];
+                let vB = b.values[0][colIndex];
+
+                // Handle nulls
+                if (vA === null || vA === undefined) vA = '';
+                if (vB === null || vB === undefined) vB = '';
+
+                // Handle numbers
+                if (!isNaN(vA) && !isNaN(vB) && vA !== '' && vB !== '') {
+                    vA = Number(vA);
+                    vB = Number(vB);
+                } else {
+                    vA = String(vA).toLowerCase();
+                    vB = String(vB).toLowerCase();
+                }
+
+                if (vA < vB) return direction === 'asc' ? -1 : 1;
+                if (vA > vB) return direction === 'asc' ? 1 : -1;
+                return 0;
             });
         }
 
