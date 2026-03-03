@@ -126,6 +126,8 @@
                     class="pb-4 text-sm font-bold transition-all tab-active whitespace-nowrap">Ramasses</button>
                 <button onclick="switchTab('tab-clients')" id="btn-clients"
                     class="pb-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-all whitespace-nowrap">Clients</button>
+                <button onclick="switchTab('tab-prospection')" id="btn-prospection"
+                    class="pb-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-all whitespace-nowrap">Prospection</button>
                 <button onclick="switchTab('tab-production')" id="btn-production"
                     class="pb-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition-all whitespace-nowrap">Production</button>
                 <button onclick="switchTab('tab-departs')" id="btn-departs"
@@ -205,6 +207,41 @@
                             <tr id="table-head-clients"></tr>
                         </thead>
                         <tbody id="table-body-clients" class="divide-y divide-slate-50 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: Prospection -->
+            <div id="tab-prospection" class="tab-pane hidden space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
+                    <div class="flex items-center gap-4 w-full md:w-auto">
+                        <h2 class="text-xl font-black text-slate-900">Prospection CRM</h2>
+                        <div class="relative w-full md:w-64">
+                            <input type="text" placeholder="Rechercher..."
+                                onkeyup="filterTable('T_Prospection', this.value)"
+                                class="w-full bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-xl px-10 py-2 text-sm font-semibold outline-none transition-all">
+                            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <button onclick="openModal('T_Prospection')"
+                        class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Nouveau Prospect
+                    </button>
+                </div>
+                <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="sticky-thead border-b border-slate-100">
+                            <tr id="table-head-prospection"></tr>
+                        </thead>
+                        <tbody id="table-body-prospection" class="divide-y divide-slate-50 text-sm"></tbody>
                     </table>
                 </div>
             </div>
@@ -637,6 +674,18 @@
                     { name: 'Matière collect', type: 'select', optionsTable: 'T_MP', optionLabelIndex: 1 },
                     { name: 'ordre', type: 'number', default: 1 }
                 ]
+            },
+            'T_Prospection': {
+                title: 'Prospection (CRM)',
+                idPrefix: 'PS',
+                cols: [
+                    { name: 'N° Prospect', type: 'number', readonly: true },
+                    { name: 'Client', type: 'select', optionsTable: 'T_Clients', optionLabelIndex: 1 },
+                    { name: 'Date contact', type: 'date' },
+                    { name: 'Date relance', type: 'date' },
+                    { name: 'Statut', type: 'select', options: ['Prospect', 'Relance à faire', 'En négociation', 'Signé', 'Abandonné'] },
+                    { name: 'Commentaires', type: 'textarea' }
+                ]
             }
         };
 
@@ -1047,6 +1096,12 @@
                     values.push(val);
                 }
 
+                // Auto-fill Client Name for T_Prospection display if we had it (but the current render logic uses row.values)
+                // The current app design stores what's in 'values'. 
+                // In T_Prospection, column 1 is 'N° Client'. Let's see if we should store name or ID.
+                // The screenshot shows "N° Client" but the headers I proposed were labels.
+                // I will stick to what the user implemented in Excel (N° Prospect, N° Client, Date contact, Date relance, Statut, Commentaires)
+
                 let res;
                 if (rowIndex === null) {
                     // Create
@@ -1120,8 +1175,13 @@
             }
 
             // Load data for the new tab
-            const suffix = tabId.split('-')[1]; // clients, ramasses...
-            const tableName = Object.keys(TABLE_CONFIG).find(k => normalizeStr(k).includes(suffix));
+            const suffix = tabId.split('-')[1]; // clients, prospection, ramasses...
+            const tableName = Object.keys(TABLE_CONFIG).find(k => {
+                const normK = normalizeStr(k);
+                if (suffix === 'prospection') return normK.includes('prospection');
+                if (suffix === 'departs') return normK.includes('depart');
+                return normK.includes(suffix);
+            });
             if (tableName) loadTableData(tableName);
 
             if (tabId === 'tab-parametres') {
