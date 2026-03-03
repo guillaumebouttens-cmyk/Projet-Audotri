@@ -1040,7 +1040,141 @@
                 }
             }
 
+            // Document Management Section (Only for existing Contacts)
+            if (tableName === 'T_Clients' && rowIndex !== null) {
+                const contactName = currentModalState.data[1];
+                const docSection = document.createElement("div");
+                docSection.className = "mt-12 pt-8 border-t border-slate-100 space-y-6 col-span-full";
+                docSection.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-black text-slate-900">Gestion des Documents</h3>
+                            <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Contrats, Avenants, PDF...</p>
+                        </div>
+                        <label class="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer hover:bg-blue-100 transition-colors">
+                            <input type="file" class="hidden" accept=".pdf" onchange="uploadContactFile(this)">
+                            + Ajouter un PDF
+                        </label>
+                    </div>
+                    <div id="contact-docs-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 min-h-[60px] relative">
+                        <!-- Documents injected here -->
+                        <div class="col-span-full text-center py-4 text-slate-400 italic text-xs">Chargement des documents...</div>
+                    </div>
+                `;
+                form.appendChild(docSection);
+                loadContactDocuments(contactName);
+            }
+
             document.getElementById("crud-modal").classList.remove("hidden");
+        }
+
+        async function loadContactDocuments(contactName) {
+            const listContainer = document.getElementById("contact-docs-list");
+            if (!listContainer) return;
+
+            try {
+                const token = await getToken();
+                // We target /Application/Documents_Contacts/{contactName}
+                const folderPath = encodeURIComponent(`Application/Documents_Contacts/${contactName}`);
+                const driveBaseUrl = resolvedGraphBaseUrl.split('/workbook')[0];
+
+                const res = await fetch(`${driveBaseUrl}/root:/${folderPath}:/children`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (res.status === 404) {
+                    listContainer.innerHTML = `<div class="col-span-full text-center py-4 text-slate-400 italic text-xs">Aucun document pour le moment.</div>`;
+                    return;
+                }
+
+                if (!res.ok) throw new Error("Erreur lors de la lecture du dossier.");
+                const data = await res.json();
+
+                if (data.value.length === 0) {
+                    listContainer.innerHTML = `<div class="col-span-full text-center py-4 text-slate-400 italic text-xs">Aucun document pour le moment.</div>`;
+                } else {
+                    listContainer.innerHTML = data.value.map(file => `
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl group hover:bg-blue-50/50 transition-colors border border-slate-100">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <div class="w-8 h-8 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                </div>
+                                <span class="text-xs font-bold text-slate-700 truncate">${file.name}</span>
+                            </div>
+                            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a href="${file['@microsoft.graph.downloadUrl']}" target="_blank" class="p-2 text-blue-600 hover:bg-white rounded-lg transition-colors shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                </a>
+                                <button onclick="deleteContactDocument('${file.id}', '${contactName}')" class="p-2 text-rose-500 hover:bg-white rounded-lg transition-colors shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                listContainer.innerHTML = `<div class="col-span-full text-center py-4 text-rose-500 italic text-xs">Erreur: ${err.message}</div>`;
+            }
+        }
+
+        async function uploadContactFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const contactName = currentModalState.data[1];
+            const originalBtnText = input.parentElement.innerText;
+            input.parentElement.innerHTML = `<div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>`;
+
+            try {
+                const token = await getToken();
+                const fileName = encodeURIComponent(file.name);
+                const folderPath = encodeURIComponent(`Application/Documents_Contacts/${contactName}`);
+                const driveBaseUrl = resolvedGraphBaseUrl.split('/workbook')[0];
+
+                const res = await fetch(`${driveBaseUrl}/root:/${folderPath}/${fileName}:/content`, {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": file.type
+                    },
+                    body: file
+                });
+
+                if (res.ok) {
+                    showToast("Document uploadé ! 📄", "success");
+                    loadContactDocuments(contactName);
+                } else {
+                    const err = await res.json();
+                    throw new Error(err.error.message);
+                }
+            } catch (err) {
+                showToast("Erreur upload: " + err.message, "error");
+            } finally {
+                // Restore button state
+                const label = document.querySelector('label[class*="bg-blue-50"]');
+                if (label) {
+                    label.innerHTML = `<input type="file" class="hidden" accept=".pdf" onchange="uploadContactFile(this)"> + Ajouter un PDF`;
+                }
+            }
+        }
+
+        async function deleteContactDocument(fileId, contactName) {
+            if (!confirm("Supprimer ce document ?")) return;
+            try {
+                const token = await getToken();
+                const driveBaseUrl = resolvedGraphBaseUrl.split('/workbook')[0];
+                const res = await fetch(`${driveBaseUrl}/items/${fileId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (res.status === 204 || res.ok) {
+                    showToast("Document supprimé", "success");
+                    loadContactDocuments(contactName);
+                }
+            } catch (err) {
+                showToast("Erreur suppression: " + err.message, "error");
+            }
         }
 
         async function populateSelect(select, tableName, labelIdx, selectedVal) {
