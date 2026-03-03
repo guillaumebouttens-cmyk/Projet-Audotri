@@ -574,12 +574,12 @@
                     { name: 'Téléphone', type: 'text' },
                     { name: 'Adresse mail', type: 'text' },
                     { name: 'Contrat', type: 'checkbox' },
+                    { name: 'Client ?', type: 'checkbox' },
                     { name: 'Ramasse lundi', type: 'checkbox' },
                     { name: 'Ramasse mardi', type: 'checkbox' },
                     { name: 'Ramasse mercredi', type: 'checkbox' },
                     { name: 'Ramasse jeudi', type: 'checkbox' },
-                    { name: 'Ramasse vendredi', type: 'checkbox' },
-                    { name: 'Client ?', type: 'checkbox' }
+                    { name: 'Ramasse vendredi', type: 'checkbox' }
                 ]
             },
             'T_Ramasses': {
@@ -817,12 +817,16 @@
                 });
                 if (!res.ok) throw new Error("Erreur lors de la récupération des données.");
                 const data = await res.json();
-                cachedData[tableName] = data.value;
+                // Store with absolute index to fix search/edit bug
+                cachedData[tableName] = data.value.map((row, idx) => {
+                    row.__idx = idx;
+                    return row;
+                });
 
                 if (tableName === 'T_SmnType') {
-                    renderCalendar(data.value);
+                    renderCalendar(cachedData[tableName]);
                 } else {
-                    renderTable(tableName, data.value);
+                    renderTable(tableName, cachedData[tableName]);
                 }
             } catch (err) {
                 console.error(err);
@@ -851,11 +855,10 @@
             }
 
             // We only render filtered or limited rows, but they are already cached.
-            // Let's use filterTable logic or just render all (reversed)
             const displayRows = [...rows].reverse().slice(0, 50);
 
-            displayRows.forEach((row, idx) => {
-                const originalIdx = rows.length - 1 - idx;
+            displayRows.forEach((row) => {
+                const originalIdx = row.__idx;
                 const vals = row.values[0];
                 const tr = document.createElement("tr");
                 tr.className = "hover:bg-slate-50/50 transition-colors group";
@@ -1154,10 +1157,11 @@
                 const contactIndex = contacts.findIndex(r => r.values[0][1] === clientName);
 
                 if (contactIndex !== -1) {
+                    const absIndex = contacts[contactIndex].__idx;
                     const contactData = [...contacts[contactIndex].values[0]];
-                    contactData[15] = true; // Client ? field is at index 15
+                    contactData[10] = true; // Client ? field is now at index 10
 
-                    const res = await fetch(`${resolvedGraphBaseUrl}/tables/T_Clients/rows/itemAt(index=${contactIndex})`, {
+                    const res = await fetch(`${resolvedGraphBaseUrl}/tables/T_Clients/rows/itemAt(index=${absIndex})`, {
                         method: "PATCH",
                         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                         body: JSON.stringify({ values: [contactData] })
