@@ -553,6 +553,7 @@
         const SITE_PATH = "gbsconseil.sharepoint.com:/sites/Audotri";
         const FILE_PATH = "/Application/BDD ACI.xlsx";
         let resolvedGraphBaseUrl = null;
+        let resolvedDriveBaseUrl = null;
 
         const myMSALObj = new msal.PublicClientApplication(msalConfig);
 
@@ -769,6 +770,7 @@
                 if (!file) throw new Error(`Le fichier "${fileName}" est introuvable.`);
 
                 resolvedGraphBaseUrl = `https://graph.microsoft.com/v1.0/sites/${siteData.id}/drive/items/${file.id}/workbook`;
+                resolvedDriveBaseUrl = `https://graph.microsoft.com/v1.0/sites/${siteData.id}/drive`;
                 console.log("Graph URL:", resolvedGraphBaseUrl);
             } catch (err) {
                 showToast("Erreur SharePoint: " + err.message, "error");
@@ -1076,9 +1078,8 @@
                 const token = await getToken();
                 // We target /Application/Documents_Contacts/{contactName}
                 const folderPath = encodeURIComponent(`Application/Documents_Contacts/${contactName}`);
-                const driveBaseUrl = resolvedGraphBaseUrl.split('/workbook')[0];
 
-                const res = await fetch(`${driveBaseUrl}/root:/${folderPath}:/children`, {
+                const res = await fetch(`${resolvedDriveBaseUrl}/root:/${folderPath}:/children`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
@@ -1129,9 +1130,8 @@
                 const token = await getToken();
                 const fileName = encodeURIComponent(file.name);
                 const folderPath = encodeURIComponent(`Application/Documents_Contacts/${contactName}`);
-                const driveBaseUrl = resolvedGraphBaseUrl.split('/workbook')[0];
 
-                const res = await fetch(`${driveBaseUrl}/root:/${folderPath}/${fileName}:/content`, {
+                const res = await fetch(`${resolvedDriveBaseUrl}/root:/${folderPath}/${fileName}:/content`, {
                     method: "PUT",
                     headers: {
                         "Authorization": `Bearer ${token}`,
@@ -1162,8 +1162,7 @@
             if (!confirm("Supprimer ce document ?")) return;
             try {
                 const token = await getToken();
-                const driveBaseUrl = resolvedGraphBaseUrl.split('/workbook')[0];
-                const res = await fetch(`${driveBaseUrl}/items/${fileId}`, {
+                const res = await fetch(`${resolvedDriveBaseUrl}/items/${fileId}`, {
                     method: "DELETE",
                     headers: { "Authorization": `Bearer ${token}` }
                 });
