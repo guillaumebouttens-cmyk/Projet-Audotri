@@ -165,12 +165,11 @@
     <!-- Header / Nav -->
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar Navigation -->
-        <aside class="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0">
-            <div class="px-4 py-6 border-b border-gray-100 flex items-center gap-3">
-                <img src="logo_audotri.png" alt="Audotri Logo" class="w-10 h-10 object-contain">
+        <aside class="w-32 bg-white border-r border-gray-200 flex flex-col shrink-0">
+            <div class="px-2 py-6 border-b border-gray-100 flex items-center justify-center">
                 <div>
-                    <h1 class="text-base font-black text-slate-900 leading-tight">Audotri</h1>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Production ACI</p>
+                    <h1 class="text-sm font-black text-slate-900 leading-tight">Audotri</h1>
+                    <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-center">ACI</p>
                 </div>
             </div>
 
@@ -186,9 +185,9 @@
                         </svg>
                     </div>
                     <div id="group-crm" class="nav-group-content open">
-                        <button onclick="switchTab('tab-clients')" id="btn-clients" class="nav-item">Contacts</button>
+                        <button onclick="switchTab('tab-clients')" id="btn-clients" class="nav-item !px-2 text-[10px]">👥 Contacts</button>
                         <button onclick="switchTab('tab-prospection')" id="btn-prospection"
-                            class="nav-item">Prospection</button>
+                            class="nav-item !px-2 text-[10px]">🎯 Prospection</button>
                     </div>
                 </div>
 
@@ -202,22 +201,21 @@
                         </svg>
                     </div>
                     <div id="group-ops" class="nav-group-content open">
-                        <button onclick="switchTab('tab-ramasses')" id="btn-ramasses" class="nav-item">Ramasses</button>
+                        <button onclick="switchTab('tab-ramasses')" id="btn-ramasses" class="nav-item !px-2 text-[10px]">🚛 Ramasses</button>
                         <button onclick="switchTab('tab-production')" id="btn-production"
-                            class="nav-item">Production</button>
-                        <button onclick="switchTab('tab-departs')" id="btn-departs" class="nav-item">Départs</button>
+                            class="nav-item !px-2 text-[10px]">🏭 Production</button>
+                        <button onclick="switchTab('tab-departs')" id="btn-departs" class="nav-item !px-2 text-[10px]">📦 Départs</button>
                         <button onclick="switchTab('tab-incidents')" id="btn-incidents"
-                            class="nav-item">Incidents</button>
-                        <button onclick="switchTab('tab-semaine')" id="btn-semaine" class="nav-item">Semaine
-                            Type</button>
+                            class="nav-item !px-2 text-[10px]">⚠️ Incidents</button>
+                        <button onclick="switchTab('tab-semaine')" id="btn-semaine" class="nav-item !px-2 text-[10px]">📅 Semaine Type</button>
                     </div>
                 </div>
 
 
                 <!-- Settings -->
-                <div class="mt-auto px-2">
+                <div class="mt-auto px-1">
                     <button onclick="switchTab('tab-parametres')" id="btn-parametres"
-                        class="nav-item rounded-xl">Paramètres</button>
+                        class="nav-item !px-2 text-[10px] rounded-xl">⚙️ Paramètres</button>
                 </div>
 
             </nav>
@@ -376,7 +374,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-[1.5fr_1fr] gap-4 h-[calc(100vh-220px)]">
+                        <div class="grid grid-cols-[2.5fr_1fr] gap-4 h-[calc(100vh-220px)]">
 
                             <!-- LEFT COLUMN: Client Data & Documents -->
                             <div class="detail-card flex flex-col min-h-0">
