@@ -2132,13 +2132,12 @@
 
             async function populateSelect(select, tableName, labelIdx, selectedVal) {
                 if (!tableName) return;
-                const config = Object.values(TABLE_CONFIG).find(c => c.optionsTable === tableName) ||
-                    TABLE_CONFIG[currentModalState ? currentModalState.table : '']?.cols.find(c => c.optionsTable === tableName);
-                // More robust way to find valueIndex: pass it or find it from current col
-                // Since populateSelect only knows tableName, let's find the col in currentModalState
+                const currentTable = currentModalState ? currentModalState.tableName : '';
+                const config = (currentTable && TABLE_CONFIG[currentTable]) ? TABLE_CONFIG[currentTable] : null;
+
                 let valueIdx = labelIdx;
-                if (currentModalState) {
-                    const col = TABLE_CONFIG[currentModalState.table].cols.find(c => c.optionsTable === tableName);
+                if (config) {
+                    const col = config.cols.find(c => c.optionsTable === tableName);
                     if (col && col.valueIndex !== undefined) valueIdx = col.valueIndex;
                 }
 
