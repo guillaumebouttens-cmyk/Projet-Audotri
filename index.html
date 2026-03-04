@@ -157,6 +157,52 @@
             background: #f8fafc;
             color: #2563eb;
         }
+
+        /* Reporting Specifics */
+        #rep-client-suggestions {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        @media print {
+
+            aside,
+            .print\:hidden,
+            #auth-controls,
+            button,
+            input[type="date"]::-webkit-calendar-picker-indicator {
+                display: none !important;
+            }
+
+            main {
+                overflow: visible !important;
+                background: white !important;
+                padding: 0 !important;
+            }
+
+            #app-content {
+                display: block !important;
+                padding: 0 !important;
+            }
+
+            .glass-card {
+                backdrop-filter: none !important;
+                background: white !important;
+                border: 1px solid #e2e8f0 !important;
+                box-shadow: none !important;
+            }
+
+            .tab-pane {
+                display: block !important;
+            }
+
+            .tab-pane:not(#tab-reporting-client) {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+            }
+        }
     </style>
 </head>
 
@@ -229,8 +275,6 @@
                     <div id="group-reporting" class="nav-group-content open">
                         <button onclick="switchTab('tab-reporting-client')" id="btn-reporting-client"
                             class="nav-item !px-2 text-[10px]">📈 Reporting Client</button>
-                        <button onclick="switchTab('tab-reporting-mensuel')" id="btn-reporting-mensuel"
-                            class="nav-item !px-2 text-[10px]">📊 Reporting Mensuel</button>
                     </div>
                 </div>
 
@@ -569,33 +613,86 @@
 
 
                 <!-- TAB: Reporting Client -->
-                <div id="tab-reporting-client" class="tab-pane hidden space-y-4">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-1">
+                <div id="tab-reporting-client" class="tab-pane hidden space-y-4 print:space-y-6">
+                    <div
+                        class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-1 print:hidden">
                         <div class="flex flex-wrap items-center gap-4 w-full md:w-auto">
                             <h2 class="text-xl font-black text-slate-900">Reporting Client</h2>
-                            <div class="flex items-center gap-2">
-                                <select id="rep-client-select" onchange="updateReportingClient()"
-                                    class="bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-lg px-3 py-2 text-xs font-bold outline-none text-slate-600 min-w-[200px]">
-                                    <option value="">Sélectionner un client</option>
-                                </select>
+
+                            <div class="flex items-center gap-3">
+                                <!-- Searchable Client Dropdown -->
+                                <div class="relative min-w-[300px]" id="rep-client-search-container">
+                                    <div
+                                        class="flex items-center bg-white ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-blue-500 rounded-xl px-3 py-2 transition-all shadow-sm">
+                                        <svg class="w-4 h-4 text-slate-400 mr-2" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z"></path>
+                                        </svg>
+                                        <input type="text" id="rep-client-search-input"
+                                            placeholder="Rechercher un client..." onfocus="showClientSuggestions()"
+                                            onkeyup="filterClientSuggestions(this.value)"
+                                            class="w-full text-xs font-bold outline-none text-slate-700 bg-transparent">
+                                        <input type="hidden" id="rep-client-id">
+                                    </div>
+                                    <div id="rep-client-suggestions"
+                                        class="hidden absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-slate-100 z-[210] max-h-60 overflow-y-auto no-scrollbar">
+                                        <!-- Suggestions injected here -->
+                                    </div>
+                                </div>
+
+                                <!-- Date Range -->
                                 <div
-                                    class="flex items-center gap-2 bg-white ring-1 ring-slate-200 rounded-lg px-3 py-1.5">
-                                    <span class="text-[10px] font-black text-slate-400 uppercase">Du</span>
-                                    <input type="date" id="rep-client-start" onchange="updateReportingClient()"
-                                        class="border-0 text-xs font-bold outline-none text-slate-600 bg-transparent">
-                                    <span class="text-[10px] font-black text-slate-400 uppercase">Au</span>
-                                    <input type="date" id="rep-client-end" onchange="updateReportingClient()"
-                                        class="border-0 text-xs font-bold outline-none text-slate-600 bg-transparent">
+                                    class="flex items-center gap-2 bg-white ring-1 ring-slate-200 rounded-xl px-3 py-2 shadow-sm">
+                                    <div class="flex items-center gap-1.5 border-r border-slate-100 pr-2">
+                                        <span
+                                            class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Du</span>
+                                        <input type="date" id="rep-client-start" onchange="updateReportingClient()"
+                                            class="border-0 text-[11px] font-bold outline-none text-slate-600 bg-transparent">
+                                    </div>
+                                    <div class="flex items-center gap-1.5 pl-1">
+                                        <span
+                                            class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Au</span>
+                                        <input type="date" id="rep-client-end" onchange="updateReportingClient()"
+                                            class="border-0 text-[11px] font-bold outline-none text-slate-600 bg-transparent">
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <div class="flex items-center gap-2">
+                            <button onclick="exportToPDF()"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-100 transition-all active:scale-95 text-xs">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                                    </path>
+                                </svg>
+                                Générer PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Filters Row -->
+                    <div class="flex flex-wrap gap-2 px-1 print:hidden">
+                        <button onclick="setQuickDateRange('current_month')"
+                            class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100">Ce
+                            mois</button>
+                        <button onclick="setQuickDateRange('last_month')"
+                            class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100">Mois
+                            dernier</button>
+                        <button onclick="setQuickDateRange('last_3_months')"
+                            class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100">3
+                            derniers mois</button>
+                        <button onclick="setQuickDateRange('year')"
+                            class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100">Année
+                            en cours</button>
                     </div>
 
                     <!-- Summary Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div
-                            class="glass-card p-6 rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative">
-                            <div class="absolute top-0 right-0 p-4 opacity-10">
+                            class="glass-card p-6 rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative print:border-slate-200">
+                            <div class="absolute top-0 right-0 p-4 opacity-10 print:hidden">
                                 <svg class="w-16 h-16 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                                     <path
                                         d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z">
@@ -605,15 +702,13 @@
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Tonnes
                             </p>
                             <h3 id="rep-client-total-tonnes" class="text-3xl font-black text-slate-900 leading-none">
-                                0.00
-                            </h3>
+                                0.00</h3>
                             <p class="text-[10px] font-bold text-blue-600 mt-2 uppercase tracking-tight">Tonnes
-                                collectées
-                            </p>
+                                collectées</p>
                         </div>
                         <div
-                            class="glass-card p-6 rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative">
-                            <div class="absolute top-0 right-0 p-4 opacity-10">
+                            class="glass-card p-6 rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative print:border-slate-200">
+                            <div class="absolute top-0 right-0 p-4 opacity-10 print:hidden">
                                 <svg class="w-16 h-16 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
                                 </svg>
@@ -625,8 +720,24 @@
                                 passages</p>
                         </div>
                         <div
-                            class="glass-card p-6 rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative">
-                            <div class="absolute top-0 right-0 p-4 opacity-10">
+                            class="glass-card p-6 rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative print:border-slate-200">
+                            <div class="absolute top-0 right-0 p-4 opacity-10 print:hidden">
+                                <svg class="w-16 h-16 text-rose-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Incidents
+                            </p>
+                            <h3 id="rep-client-total-incidents" class="text-3xl font-black text-slate-900 leading-none">
+                                0</h3>
+                            <p class="text-[10px] font-bold text-rose-600 mt-2 uppercase tracking-tight">Signalés sur
+                                période</p>
+                        </div>
+                        <div
+                            class="glass-card p-6 rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative print:border-slate-200">
+                            <div class="absolute top-0 right-0 p-4 opacity-10 print:hidden">
                                 <svg class="w-16 h-16 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd"
                                         d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z"
@@ -641,7 +752,8 @@
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 overflow-hidden">
+                    <div
+                        class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 overflow-hidden print:shadow-none print:ring-0">
                         <table class="w-full text-left border-collapse">
                             <thead class="bg-slate-50 border-b border-slate-100">
                                 <tr>
@@ -665,75 +777,6 @@
                                     <td colspan="4" class="px-6 py-12 text-center text-slate-400 italic">Sélectionnez un
                                         client pour voir les données</td>
                                 </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- TAB: Reporting Mensuel -->
-                <div id="tab-reporting-mensuel" class="tab-pane hidden space-y-4">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-1">
-                        <div class="flex flex-wrap items-center gap-4 w-full md:w-auto">
-                            <h2 class="text-xl font-black text-slate-900">Reporting Mensuel</h2>
-                            <div class="flex items-center gap-2 bg-white ring-1 ring-slate-200 rounded-lg px-3 py-1.5">
-                                <span class="text-[10px] font-black text-slate-400 uppercase">Du</span>
-                                <input type="date" id="rep-mens-start" onchange="updateReportingMensuel()"
-                                    class="border-0 text-xs font-bold outline-none text-slate-600 bg-transparent">
-                                <span class="text-[10px] font-black text-slate-400 uppercase">Au</span>
-                                <input type="date" id="rep-mens-end" onchange="updateReportingMensuel()"
-                                    class="border-0 text-xs font-bold outline-none text-slate-600 bg-transparent">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Summary Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div
-                            class="glass-card p-6 rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative">
-                            <div class="absolute top-0 right-0 p-4 opacity-10">
-                                <svg class="w-16 h-16 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path
-                                        d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z">
-                                    </path>
-                                </svg>
-                            </div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total
-                                Général
-                            </p>
-                            <h3 id="rep-mens-total-tonnes" class="text-3xl font-black text-slate-900 leading-none">0.00
-                                t
-                            </h3>
-                        </div>
-                        <div
-                            class="glass-card p-6 rounded-3xl border border-slate-100 shadow-sm overflow-hidden relative">
-                            <div class="absolute top-0 right-0 p-4 opacity-10">
-                                <svg class="w-16 h-16 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path
-                                        d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
-                                    </path>
-                                </svg>
-                            </div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ramasses
-                                Totales
-                            </p>
-                            <h3 id="rep-mens-total-ramasses" class="text-3xl font-black text-slate-900 leading-none">0
-                            </h3>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 overflow-hidden">
-                        <table class="w-full text-left border-collapse">
-                            <thead
-                                class="bg-slate-50 border-b border-slate-100 text-[10px] font-black uppercase text-slate-400 tracking-tighter">
-                                <tr>
-                                    <th class="px-6 py-4">Mois / Année</th>
-                                    <th class="px-6 py-4">Client</th>
-                                    <th class="px-6 py-4 text-right">Tonnage (t)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="rep-mens-body"
-                                class="divide-y divide-slate-50 text-xs font-semibold text-slate-700">
-                                <!-- Data injected here -->
                             </tbody>
                         </table>
                     </div>
@@ -2239,10 +2282,6 @@
                     } else {
                         populateReportingClientSelect();
                     }
-                    updateReportingClient();
-                }
-                if (tabId === 'tab-reporting-mensuel') {
-                    updateReportingMensuel();
                 }
 
                 if (tabId === 'tab-parametres') switchSettingsTable('T_MP');
@@ -2372,40 +2411,120 @@
             /**
              * REPORTING LOGIC
              */
+            let reportingClientList = [];
+
             function populateReportingClientSelect() {
-                const select = document.getElementById("rep-client-select");
-                if (!select || !cachedData['T_Clients']) return;
-                const clients = cachedData['T_Clients'].map(r => r.values[0][1]).sort();
-                const currentVal = select.value;
-                select.innerHTML = '<option value="">Sélectionner un client</option>' +
-                    [...new Set(clients)].map(c => `<option value="${c}">${c}</option>`).join('');
-                if (currentVal) select.value = currentVal;
+                if (!cachedData['T_Clients']) return;
+                reportingClientList = cachedData['T_Clients'].map(r => ({
+                    id: r.values[0][0], // Assuming 0 is N° Client
+                    name: r.values[0][1] // Assuming 1 is Client name
+                })).sort((a, b) => a.name.localeCompare(b.name));
+            }
+
+            function showClientSuggestions() {
+                const sugg = document.getElementById("rep-client-suggestions");
+                sugg.classList.remove("hidden");
+                filterClientSuggestions(document.getElementById("rep-client-search-input").value);
+            }
+
+            function filterClientSuggestions(val) {
+                const sugg = document.getElementById("rep-client-suggestions");
+                const normVal = normalizeStr(val);
+                const filtered = reportingClientList.filter(c => normalizeStr(c.name).includes(normVal));
+
+                if (filtered.length === 0) {
+                    sugg.innerHTML = '<div class="px-4 py-8 text-center text-slate-400 italic text-xs">Aucun client trouvé</div>';
+                } else {
+                    sugg.innerHTML = filtered.map(c => `
+                        <div onclick="selectReportingClient('${c.name}', '${c.id}')" class="px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors">
+                            <div class="text-xs font-bold text-slate-700">${c.name}</div>
+                            <div class="text-[10px] text-slate-400 font-medium">#${c.id}</div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            function selectReportingClient(name, id) {
+                document.getElementById("rep-client-search-input").value = name;
+                document.getElementById("rep-client-id").value = id;
+                document.getElementById("rep-client-suggestions").classList.add("hidden");
+                updateReportingClient();
+            }
+
+            // Close suggestions on click outside
+            document.addEventListener('click', (e) => {
+                const container = document.getElementById("rep-client-search-container");
+                if (container && !container.contains(e.target)) {
+                    document.getElementById("rep-client-suggestions").classList.add("hidden");
+                }
+            });
+
+            function setQuickDateRange(range) {
+                const startInput = document.getElementById("rep-client-start");
+                const endInput = document.getElementById("rep-client-end");
+                const now = new Date();
+                let start, end;
+
+                switch (range) {
+                    case 'current_month':
+                        start = new Date(now.getFullYear(), now.getMonth(), 1);
+                        end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                        break;
+                    case 'last_month':
+                        start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                        end = new Date(now.getFullYear(), now.getMonth(), 0);
+                        break;
+                    case 'last_3_months':
+                        start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+                        end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                        break;
+                    case 'year':
+                        start = new Date(now.getFullYear(), 0, 1);
+                        end = new Date(now.getFullYear(), 11, 31);
+                        break;
+                }
+
+                if (start && end) {
+                    startInput.value = start.toISOString().split('T')[0];
+                    endInput.value = end.toISOString().split('T')[0];
+                    updateReportingClient();
+                }
             }
 
             async function updateReportingClient() {
-                const client = document.getElementById("rep-client-select").value;
+                const clientName = document.getElementById("rep-client-search-input").value;
                 const start = document.getElementById("rep-client-start").value;
                 const end = document.getElementById("rep-client-end").value;
                 const body = document.getElementById("rep-client-body");
 
                 if (!cachedData['T_Ramasses']) await loadTableData('T_Ramasses');
-                let rows = cachedData['T_Ramasses'] || [];
+                if (!cachedData['T_Incidents']) await loadTableData('T_Incidents');
+
+                let ramasses = cachedData['T_Ramasses'] || [];
+                let incidents = cachedData['T_Incidents'] || [];
 
                 // Filters
-                if (client) rows = rows.filter(r => r.values[0][3] === client);
-                if (start) rows = rows.filter(r => {
-                    const d = new Date((r.values[0][1] - 25569) * 86400 * 1000);
-                    return d >= new Date(start);
-                });
-                if (end) rows = rows.filter(r => {
-                    const d = new Date((r.values[0][1] - 25569) * 86400 * 1000);
-                    return d <= new Date(end);
-                });
+                if (clientName) {
+                    ramasses = ramasses.filter(r => r.values[0][3] === clientName);
+                    incidents = incidents.filter(r => r.values[0][2] === clientName);
+                }
+
+                const filterDate = (rows, dateIdx) => {
+                    return rows.filter(r => {
+                        const d = new Date((r.values[0][dateIdx] - 25569) * 86400 * 1000);
+                        if (start && d < new Date(start)) return false;
+                        if (end && d > new Date(end)) return false;
+                        return true;
+                    });
+                };
+
+                ramasses = filterDate(ramasses, 1); // T_Ramasses: Date is index 1
+                incidents = filterDate(incidents, 1); // T_Incidents: Date is index 1
 
                 // Stats
                 let totalKg = 0;
                 const matMap = {};
-                rows.forEach(r => {
+                ramasses.forEach(r => {
                     const qty = parseFloat(r.values[0][4]) || 0;
                     const mat = r.values[0][2] || 'Inconnue';
                     totalKg += qty;
@@ -2413,11 +2532,12 @@
                 });
 
                 document.getElementById("rep-client-total-tonnes").innerText = (totalKg / 1000).toFixed(2);
-                document.getElementById("rep-client-total-ramasses").innerText = rows.length;
-                document.getElementById("rep-client-avg-poids").innerText = rows.length ? Math.round(totalKg / rows.length) : 0;
+                document.getElementById("rep-client-total-ramasses").innerText = ramasses.length;
+                document.getElementById("rep-client-total-incidents").innerText = incidents.length;
+                document.getElementById("rep-client-avg-poids").innerText = ramasses.length ? Math.round(totalKg / ramasses.length) : 0;
 
                 // Table
-                if (rows.length === 0) {
+                if (ramasses.length === 0) {
                     body.innerHTML = `<tr><td colspan="4" class="px-6 py-12 text-center text-slate-400 italic">Aucune donnée sur cette période</td></tr>`;
                     return;
                 }
@@ -2426,67 +2546,26 @@
                     .sort((a, b) => b[1] - a[1])
                     .map(([mat, qty]) => `
                     <tr>
-                        <td class="px-6 py-4">${mat}</td>
-                        <td class="px-6 py-4">${Math.round(qty)} kg</td>
-                        <td class="px-6 py-4 font-bold text-blue-600">${(qty / 1000).toFixed(3)} t</td>
-                        <td class="px-6 py-4 text-right text-slate-400">${((qty / totalKg) * 100).toFixed(1)}%</td>
+                        <td class="px-6 py-4 font-bold text-slate-700">${mat}</td>
+                        <td class="px-6 py-4 text-slate-500 font-medium">${Math.round(qty)} kg</td>
+                        <td class="px-6 py-4 font-black text-blue-600">${(qty / 1000).toFixed(3)} t</td>
+                        <td class="px-6 py-4 text-right">
+                             <div class="flex items-center justify-end gap-2">
+                                <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: ${(qty / totalKg * 100).toFixed(0)}%"></div>
+                                </div>
+                                <span class="text-[10px] font-black text-slate-400 w-8">${((qty / totalKg) * 100).toFixed(0)}%</span>
+                             </div>
+                        </td>
                     </tr>
                 `).join('');
             }
 
-            async function updateReportingMensuel() {
-                const start = document.getElementById("rep-mens-start").value;
-                const end = document.getElementById("rep-mens-end").value;
-                const body = document.getElementById("rep-mens-body");
-
-                if (!cachedData['T_Ramasses']) await loadTableData('T_Ramasses');
-                let rows = cachedData['T_Ramasses'] || [];
-
-                // Filters
-                if (start) rows = rows.filter(r => {
-                    const d = new Date((r.values[0][1] - 25569) * 86400 * 1000);
-                    return d >= new Date(start);
-                });
-                if (end) rows = rows.filter(r => {
-                    const d = new Date((r.values[0][1] - 25569) * 86400 * 1000);
-                    return d <= new Date(end);
-                });
-
-                // Aggregation: Month-Year -> Client -> Qty
-                const agg = {};
-                let totalKg = 0;
-
-                rows.forEach(r => {
-                    const d = new Date((r.values[0][1] - 25569) * 86400 * 1000);
-                    const my = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-                    const client = r.values[0][3] || 'Inconnu';
-                    const qty = parseFloat(r.values[0][4]) || 0;
-
-                    totalKg += qty;
-                    if (!agg[my]) agg[my] = {};
-                    agg[my][client] = (agg[my][client] || 0) + qty;
-                });
-
-                document.getElementById("rep-mens-total-tonnes").innerText = (totalKg / 1000).toFixed(2) + ' t';
-                document.getElementById("rep-mens-total-ramasses").innerText = rows.length;
-
-                // Flatten for table
-                const flat = [];
-                Object.entries(agg).forEach(([my, clients]) => {
-                    Object.entries(clients).forEach(([c, q]) => {
-                        flat.push({ my, c, q });
-                    });
-                });
-
-                // Sort by month (desc)
-                // Note: Simple display for now, ideally want proper date sorting
-                body.innerHTML = flat.map(r => `
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-6 py-4 capitalize font-black text-slate-400 text-[10px] tracking-widest">${r.my}</td>
-                        <td class="px-6 py-4">${r.c}</td>
-                        <td class="px-6 py-4 text-right font-bold text-blue-600">${(r.q / 1000).toFixed(2)} t</td>
-                    </tr>
-                `).join('');
+            function exportToPDF() {
+                const client = document.getElementById("rep-client-search-input").value || "Reporting";
+                const date = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
+                document.title = `${client}_${date}`;
+                window.print();
             }
 
             window.onload = initAuth;
