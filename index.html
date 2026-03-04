@@ -1428,7 +1428,7 @@
                 const activeTab = document.querySelector('.tab-pane:not(.hidden)');
                 let suffix = 'reporting-client';
                 if (activeTab) {
-                    suffix = activeTab.id.split('-')[1];
+                    suffix = activeTab.id.replace('tab-', '');
                 }
 
                 switchTab('tab-' + suffix);
@@ -1441,7 +1441,11 @@
                     const res = await fetch(`${resolvedGraphBaseUrl}/tables/${tableName}/rows`, {
                         headers: { "Authorization": `Bearer ${token}` }
                     });
-                    if (!res.ok) throw new Error("Erreur lors de la récupération des données.");
+                    if (!res.ok) {
+                        const errBody = await res.json().catch(() => ({}));
+                        console.error(`Erreur chargement ${tableName}:`, errBody);
+                        throw new Error(`Erreur ${res.status}: ${errBody.error?.message || 'Inconnue'}`);
+                    }
                     const data = await res.json();
                     // Store with absolute index to fix search/edit bug
                     cachedData[tableName] = data.value.map((row, idx) => {
@@ -1853,9 +1857,9 @@
                 const gridBody = document.getElementById("calendar-grid-body");
                 if (!gridBody) return;
                 gridBody.innerHTML = '';
-                gridBody.style.gridTemplateRows = "repeat(9, 1fr)";
+                gridBody.style.gridTemplateRows = "repeat(8, 1fr)";
 
-                for (let h = 8; h <= 16; h++) {
+                for (let h = 8; h < 16; h++) {
                     const hourDiv = document.createElement("div");
                     hourDiv.className = "flex items-center justify-center border-r border-b border-slate-200 text-[11px] font-black text-slate-700 bg-slate-50";
                     hourDiv.innerText = `${h}:00`;
@@ -2189,21 +2193,28 @@
                     // The screenshot shows "N° Client" but the headers I proposed were labels.
                     // I will stick to what the user implemented in Excel (N° Prospect, N° Client, Date contact, Date relance, Statut, Commentaires)
 
+                    // Debugging dimension mismatch
+                    console.log(`Enregistrement ${tableName}. Colonnes attendues: ${config.cols.length}. Données fournies:`, values);
+
                     let res;
                     if (rowIndex === null) {
-                        // Create
                         res = await fetch(`${resolvedGraphBaseUrl}/tables/${tableName}/rows`, {
                             method: "POST",
                             headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                             body: JSON.stringify({ values: [values] })
                         });
                     } else {
-                        // Update - Use direct PATCH on the row index
                         res = await fetch(`${resolvedGraphBaseUrl}/tables/${tableName}/rows/itemAt(index=${rowIndex})`, {
                             method: "PATCH",
                             headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                             body: JSON.stringify({ values: [values] })
                         });
+                    }
+
+                    if (!res.ok) {
+                        const err = await res.json();
+                        console.error("Erreur Excel Save:", err);
+                        throw new Error(err.error?.message || "Erreur inconnue");
                     }
 
                     if (res.ok) {
@@ -2220,11 +2231,9 @@
 
                         closeModal();
                         loadTableData(tableName);
-                    } else {
-                        const err = await res.json();
-                        throw new Error(err.error.message);
                     }
                 } catch (err) {
+                    console.error("Save error:", err);
                     showToast("Erreur: " + err.message, "error");
                 } finally {
                     btn.disabled = false;
@@ -2293,22 +2302,29 @@
             }
 
             function switchTab(tabId) {
+                const targetTab = document.getElementById(tabId);
+                if (!targetTab) {
+                    console.error("Tab not found:", tabId);
+                    return;
+                }
+
                 document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
-                document.getElementById(tabId).classList.remove('hidden');
+                targetTab.classList.remove('hidden');
 
                 document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('tab-active'));
-                const btnId = 'btn-' + tabId.split('-')[1];
+                const suffix = tabId.replace('tab-', '');
+                const btnId = 'btn-' + suffix;
                 if (document.getElementById(btnId)) {
                     document.getElementById(btnId).classList.add('tab-active');
                 }
 
                 // Populate filters for the new tab
-                const suffix = tabId.split('-')[1];
                 const tableName = Object.keys(TABLE_CONFIG).find(k => {
                     const normK = normalizeStr(k);
                     if (suffix === 'prospection') return normK.includes('prospection');
                     if (suffix === 'departs') return normK.includes('depart');
-                    return normK.includes(suffix);
+                    if (suffix === 'reporting-client') return false; // No direct table for this tab
+                    return normK.includes(suffix.replace(/-/g, ''));
                 });
 
                 if (tableName) {
