@@ -243,11 +243,28 @@
                 <!-- CLIENT LIST VIEW -->
                 <div id="clients-list-view" class="space-y-4">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
-                        <div class="flex items-center gap-4 w-full md:w-auto">
+                        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
                             <h2 class="text-xl font-black text-slate-900">Base Contacts</h2>
-                            <div class="relative w-full md:w-64">
-                                <input type="text" placeholder="Rechercher..."
-                                    onkeyup="filterTable('T_Clients', this.value)"
+
+                            <!-- Filters -->
+                            <div class="flex items-center gap-2">
+                                <select id="filter-client-status" onchange="runCombinedContactFilter()"
+                                    class="bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-xl px-3 py-2 text-xs font-bold outline-none transition-all text-slate-600">
+                                    <option value="all">Statut: Tous</option>
+                                    <option value="true">Clients uniquement</option>
+                                    <option value="false">Prospects uniquement</option>
+                                </select>
+                                <select id="filter-contrat-status" onchange="runCombinedContactFilter()"
+                                    class="bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-xl px-3 py-2 text-xs font-bold outline-none transition-all text-slate-600">
+                                    <option value="all">Contrat: Tous</option>
+                                    <option value="true">Avec contrat</option>
+                                    <option value="false">Sans contrat</option>
+                                </select>
+                            </div>
+
+                            <div class="relative w-full md:w-48">
+                                <input type="text" id="search-contact-input" placeholder="Rechercher..."
+                                    onkeyup="runCombinedContactFilter()"
                                     class="w-full bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-xl px-10 py-2 text-sm font-semibold outline-none transition-all">
                                 <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none"
                                     stroke="currentColor" viewBox="0 0 24 24">
@@ -292,79 +309,84 @@
                         </div>
                     </div>
 
-                    <div class="detail-grid">
-                        <!-- TOP LEFT: Client Data -->
-                        <div class="detail-card flex flex-col">
+                    <div class="grid grid-cols-[1fr_1.5fr] gap-6 h-[calc(100vh-220px)]">
+                        <!-- LEFT COLUMN: Client Data & Documents -->
+                        <div class="detail-card flex flex-col min-h-0">
                             <div class="detail-card-header">
-                                <span class="detail-card-title">Données Client</span>
+                                <span class="detail-card-title">Informations & Fichiers</span>
                                 <button onclick="editCurrentClient()"
-                                    class="text-blue-600 hover:text-blue-700 text-xs font-bold uppercase tracking-widest">Modifier</button>
+                                    class="text-blue-600 hover:text-blue-700 text-[10px] font-black uppercase tracking-widest">Modifier</button>
                             </div>
-                            <div id="detail-data-container"
-                                class="grid grid-cols-2 gap-x-6 gap-y-4 overflow-y-auto pr-2 no-scrollbar">
-                                <!-- Categorized data will be injected here -->
-                                <div class="col-span-full py-12 text-center text-slate-400 italic">Veuillez patienter...
+                            <div class="flex-1 overflow-y-auto pr-2 no-scrollbar space-y-6">
+                                <!-- Compact Data -->
+                                <div id="detail-data-container" class="grid grid-cols-1 gap-y-3">
+                                    <div class="py-12 text-center text-slate-400 italic">Veuillez patienter...</div>
+                                </div>
+
+                                <!-- Integrated Documents -->
+                                <div class="pt-6 border-t border-slate-100">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                            Documents PDF</h3>
+                                        <label
+                                            class="text-blue-600 hover:text-blue-700 text-[10px] font-black uppercase tracking-widest cursor-pointer">
+                                            <input type="file" class="hidden" accept=".pdf"
+                                                onchange="uploadContactFileDetail(this)">
+                                            + Ajouter
+                                        </label>
+                                    </div>
+                                    <div id="detail-docs-list" class="grid grid-cols-1 gap-2">
+                                        <div class="text-center py-4 text-slate-400 italic text-[10px]">Chargement...
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- TOP RIGHT: Prospection History -->
-                        <div class="detail-card flex flex-col">
-                            <div class="detail-card-header">
-                                <span class="detail-card-title">Suivi Prospection</span>
-                                <button onclick="openModal('T_Prospection', null, { client: currentDetailClientName })"
-                                    class="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase">+
-                                    Nouveau</button>
-                            </div>
-                            <div id="detail-prospection-list" class="space-y-3 overflow-y-auto pr-2 no-scrollbar">
-                                <div class="py-12 text-center text-slate-400 italic">Aucun historique de prospection.
+                        <!-- RIGHT COLUMN: Prospection & Collectes -->
+                        <div class="flex flex-col gap-6 min-h-0">
+                            <!-- TOP RIGHT: Prospection History -->
+                            <div class="detail-card flex-1 flex flex-col min-h-0">
+                                <div class="detail-card-header">
+                                    <span class="detail-card-title">Suivi Prospection</span>
+                                    <button
+                                        onclick="openModal('T_Prospection', null, { client: currentDetailClientName })"
+                                        class="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase">+
+                                        Nouveau</button>
+                                </div>
+                                <div id="detail-prospection-list"
+                                    class="flex-1 overflow-y-auto pr-2 no-scrollbar space-y-3">
+                                    <div class="py-12 text-center text-slate-400 italic">Aucun historique.</div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- BOTTOM LEFT: Uploaded Documents -->
-                        <div class="detail-card flex flex-col">
-                            <div class="detail-card-header">
-                                <span class="detail-card-title">Documents Uploadés</span>
-                                <label
-                                    class="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase cursor-pointer">
-                                    <input type="file" class="hidden" accept=".pdf"
-                                        onchange="uploadContactFileDetail(this)">
-                                    + Ajouter
-                                </label>
-                            </div>
-                            <div id="detail-docs-list" class="grid grid-cols-1 gap-2 overflow-y-auto pr-2 no-scrollbar">
-                                <div class="py-12 text-center text-slate-400 italic">Chargement des documents...</div>
-                            </div>
-                        </div>
-
-                        <!-- BOTTOM RIGHT: Collections Follow-up -->
-                        <div class="detail-card flex flex-col">
-                            <div class="detail-card-header">
-                                <span class="detail-card-title">Suivi des Collectes</span>
-                                <div class="flex gap-2">
-                                    <span id="stat-total-qty"
-                                        class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg text-[10px] font-black uppercase">0
-                                        kg</span>
+                            <!-- BOTTOM RIGHT: Collections Sum -->
+                            <div class="detail-card flex-1 flex flex-col min-h-0">
+                                <div class="detail-card-header">
+                                    <span class="detail-card-title">Synthèse Collectes</span>
+                                    <button onclick="switchTab('tab-ramasses')"
+                                        class="text-blue-600 hover:text-blue-700 text-[10px] font-black uppercase tracking-widest">Voir
+                                        détails →</button>
                                 </div>
-                            </div>
-                            <div id="detail-collectes-list" class="overflow-y-auto pr-2 no-scrollbar">
-                                <table class="w-full text-left text-xs">
-                                    <thead class="sticky top-0 bg-white border-b border-slate-100 z-10">
-                                        <tr>
-                                            <th class="py-2 font-black text-slate-400 uppercase tracking-tighter">Date
-                                            </th>
-                                            <th class="py-2 font-black text-slate-400 uppercase tracking-tighter">
-                                                Matière</th>
-                                            <th
-                                                class="py-2 font-black text-slate-400 uppercase tracking-tighter text-right">
-                                                Qté</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="detail-collectes-body" class="divide-y divide-slate-50">
-                                        <!-- Collectes injected here -->
-                                    </tbody>
-                                </table>
+                                <div class="flex-1 overflow-y-auto pr-2 no-scrollbar">
+                                    <table class="w-full text-left text-[11px]">
+                                        <thead class="sticky top-0 bg-white border-b border-slate-100 z-10">
+                                            <tr>
+                                                <th class="py-2 font-black text-slate-400 uppercase tracking-tighter">
+                                                    Mois</th>
+                                                <th class="py-2 font-black text-slate-400 uppercase tracking-tighter">
+                                                    Matière</th>
+                                                <th
+                                                    class="py-2 font-black text-slate-400 uppercase tracking-tighter text-right">
+                                                    Poids Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detail-collectes-body"
+                                            class="divide-y divide-slate-50 font-semibold text-slate-600">
+                                            <!-- Stats injected here -->
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1113,17 +1135,31 @@
             });
         }
 
-        function filterTable(tableName, query) {
-            const rows = cachedData[tableName] || [];
-            if (!query) return renderTable(tableName, rows);
+        function runCombinedContactFilter() {
+            const query = normalizeStr(document.getElementById("search-contact-input").value);
+            const clientFilter = document.getElementById("filter-client-status").value;
+            const contratFilter = document.getElementById("filter-contrat-status").value;
 
-            const q = normalizeStr(query);
+            const rows = cachedData['T_Clients'] || [];
+
             const filtered = rows.filter(r => {
-                return r.values[0].some(val =>
-                    normalizeStr(val).includes(q)
-                );
+                const vals = r.values[0];
+
+                // 1. Text Search
+                const matchText = !query || vals.some(val => normalizeStr(val).includes(query));
+
+                // 2. Client Status Filter (Index 10: Client ?)
+                const isClient = vals[10] === true || vals[10] === 'VRAI' || vals[10] === 'TRUE';
+                const matchClient = clientFilter === 'all' || (clientFilter === 'true' && isClient) || (clientFilter === 'false' && !isClient);
+
+                // 3. Contrat Status Filter (Index 9: Contrat)
+                const hasContrat = vals[9] === true || vals[9] === 'VRAI' || vals[9] === 'TRUE';
+                const matchContrat = contratFilter === 'all' || (contratFilter === 'true' && hasContrat) || (contratFilter === 'false' && !hasContrat);
+
+                return matchText && matchClient && matchContrat;
             });
-            renderTable(tableName, filtered);
+
+            renderTable('T_Clients', filtered);
         }
 
         /**
@@ -1159,19 +1195,14 @@
             const vals = clientRow.values[0];
             const config = TABLE_CONFIG['T_Clients'];
 
-            // 1. Data Sections
+            // 1. Data Sections (Compact & Left Aligned)
             const dataContainer = document.getElementById("detail-data-container");
-            const categories = {
-                "Général": [0, 1, 2, 10], // ID, Nom, Groupe, Client ?
-                "Coordonnées": [3, 4, 5, 6, 7, 8], // Adresse, CP, Ville, Tel, Mail
-                "Planning": [11, 12, 13, 14, 15] // Ramasses
-            };
 
-            dataContainer.innerHTML = Object.entries(categories).map(([cat, indices]) => `
-                <div class="col-span-full border-l-2 border-slate-100 pl-3 mb-2 mt-4 first:mt-0">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${cat}</span>
-                </div>
-                ${indices.map(i => {
+            // Indices to EXCLUDE: 0 (ID), 1 (Nom), 2 (Groupe)
+            // Indices to include and order
+            const displayIndices = [10, 9, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15];
+
+            dataContainer.innerHTML = displayIndices.map(i => {
                 const col = config.cols[i];
                 let val = vals[i] || '-';
                 if (col.type === 'checkbox') {
@@ -1179,22 +1210,69 @@
                     val = isChecked ? '<span class="text-emerald-600">OUI</span>' : '<span class="text-slate-300">NON</span>';
                 }
                 return `
-                        <div class="space-y-0.5">
-                            <p class="data-label">${col.name}</p>
-                            <p class="data-value">${val}</p>
-                        </div>
-                    `;
-            }).join('')}
-            `).join('');
+                    <div class="flex items-center justify-between border-b border-slate-50 pb-1">
+                        <span class="data-label text-[9px]">${col.name}</span>
+                        <span class="data-value text-[11px]">${val}</span>
+                    </div>
+                `;
+            }).join('');
 
             // 2. Load Prospection
             loadClientProspection(currentDetailClientName);
 
-            // 3. Load Documents
+            // 3. Load Documents (Integrated)
             loadContactDocumentsDetail(currentDetailClientName);
 
-            // 4. Load Collectes
-            loadClientCollectes(currentDetailClientName);
+            // 4. Load Collectes (With Month Aggregation)
+            loadClientCollectesAggregated(currentDetailClientName);
+        }
+
+        async function loadClientCollectesAggregated(clientName) {
+            const body = document.getElementById("detail-collectes-body");
+            if (!cachedData['T_Ramasses']) await loadTableData('T_Ramasses');
+            const history = (cachedData['T_Ramasses'] || []).filter(r => r.values[0][3] === clientName);
+
+            if (history.length === 0) {
+                body.innerHTML = `<tr><td colspan="3" class="py-12 text-center text-slate-400 italic">Aucune ramasse enregistrée.</td></tr>`;
+                return;
+            }
+
+            // Aggregation map: "Month Year" -> "Matière" -> Total Qty
+            const aggregation = {};
+
+            history.forEach(r => {
+                const vals = r.values[0];
+                if (!vals[1]) return;
+
+                const date = new Date((vals[1] - 25569) * 86400 * 1000);
+                const monthYear = date.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
+                const matiere = vals[2] || 'Inconnue';
+                const qty = parseFloat(vals[4]) || 0;
+
+                if (!aggregation[monthYear]) aggregation[monthYear] = {};
+                if (!aggregation[monthYear][matiere]) aggregation[monthYear][matiere] = 0;
+                aggregation[monthYear][matiere] += qty;
+            });
+
+            // Flatten and sort for display
+            const rows = [];
+            Object.entries(aggregation).forEach(([my, matieres]) => {
+                Object.entries(matieres).forEach(([mat, qty]) => {
+                    rows.push({ monthYear: my, matiere: mat, qty: qty });
+                });
+            });
+
+            // Sort by month (reverse chron) - this is tricky with string keys, but history was mostly chronological
+            // For simplicity, we just reverse the flattened rows if they are based on chronological ingestion
+            rows.reverse();
+
+            body.innerHTML = rows.map(r => `
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="py-2 capitalize text-slate-400 font-bold">${r.monthYear}</td>
+                    <td class="py-2 text-slate-700">${r.matiere}</td>
+                    <td class="py-2 text-blue-600 text-right font-black">${Math.round(r.qty)} kg</td>
+                </tr>
+            `).join('');
         }
 
         async function loadClientProspection(clientName) {
@@ -1203,7 +1281,7 @@
             const history = (cachedData['T_Prospection'] || []).filter(r => r.values[0][1] === clientName);
 
             if (history.length === 0) {
-                list.innerHTML = `<div class="py-12 text-center text-slate-400 italic">Aucun historique de prospection.</div>`;
+                list.innerHTML = `<div class="py-12 text-center text-slate-400 italic text-[11px]">Aucun historique de prospection.</div>`;
                 return;
             }
 
@@ -1217,56 +1295,22 @@
                 const comments = vals[5] || 'Pas de commentaire.';
 
                 return `
-                    <div class="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden divide-y divide-slate-100">
-                        <button onclick="this.parentElement.classList.toggle('accordion-active')" class="w-full flex justify-between items-center p-4 hover:bg-slate-100/50 transition-colors text-left group">
-                            <div class="flex items-center gap-3">
-                                <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">${dateContact}</span>
-                                <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ${status === 'Signé' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}">${status}</span>
+                    <div class="bg-slate-50 rounded-xl border border-slate-100 overflow-hidden divide-y divide-slate-100">
+                        <button onclick="this.parentElement.classList.toggle('accordion-active')" class="w-full flex justify-between items-center p-3 hover:bg-slate-100/50 transition-colors text-left group">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[9px] font-black text-blue-600 uppercase tracking-widest">${dateContact}</span>
+                                <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${status === 'Signé' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}">${status}</span>
                             </div>
-                            <svg class="w-4 h-4 text-slate-300 transition-transform group-[.accordion-active]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg class="w-3 h-3 text-slate-300 transition-transform group-[.accordion-active]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                         <div class="accordion-content bg-white">
-                            <div class="p-4 text-[11px] font-medium text-slate-600 leading-relaxed italic border-t border-slate-50">
+                            <div class="p-3 text-[10px] font-medium text-slate-600 leading-tight italic border-t border-slate-50">
                                 ${comments}
                             </div>
                         </div>
                     </div>
                 `;
             }).join('');
-        }
-
-        async function loadClientCollectes(clientName) {
-            const body = document.getElementById("detail-collectes-body");
-            const statQty = document.getElementById("stat-total-qty");
-            if (!cachedData['T_Ramasses']) await loadTableData('T_Ramasses');
-            const history = (cachedData['T_Ramasses'] || []).filter(r => r.values[0][3] === clientName);
-
-            if (history.length === 0) {
-                body.innerHTML = `<tr><td colspan="3" class="py-12 text-center text-slate-400 italic">Aucune ramasse enregistrée.</td></tr>`;
-                statQty.innerText = '0 kg';
-                return;
-            }
-
-            let totalQty = 0;
-            const sorted = history.sort((a, b) => b.values[0][1] - a.values[0][1]).slice(0, 20);
-
-            body.innerHTML = sorted.map(r => {
-                const vals = r.values[0];
-                const date = vals[1] ? new Date((vals[1] - 25569) * 86400 * 1000).toLocaleDateString('fr-FR') : '-';
-                const matiere = vals[2] || '-';
-                const qty = parseFloat(vals[4]) || 0;
-                totalQty += qty;
-
-                return `
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-3 font-semibold text-slate-500">${date}</td>
-                        <td class="py-3 font-bold text-slate-700">${matiere}</td>
-                        <td class="py-3 font-bold text-blue-600 text-right">${qty} kg</td>
-                    </tr>
-                `;
-            }).join('');
-
-            statQty.innerText = `${Math.round(totalQty)} kg`;
         }
 
         async function loadContactDocumentsDetail(contactName) {
