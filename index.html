@@ -941,35 +941,41 @@
 
                     <div class="bg-white rounded-[32px] shadow-sm ring-1 ring-slate-100 overflow-hidden relative">
                         <!-- Calendar Header (Days) -->
-                        <div class="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr] border-b border-slate-100 bg-slate-50/50">
-                            <div class="p-4 border-r border-slate-100"></div>
+                        <div class="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr] border-b border-slate-100 bg-slate-50/50">
+                            <div class="p-4 border-r border-slate-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
                             <div
-                                class="p-4 text-center border-r border-slate-100 font-black text-xs uppercase tracking-widest text-slate-500">
+                                class="p-4 text-center border-r border-slate-100 font-black text-[10px] uppercase tracking-widest text-slate-500">
                                 Lundi</div>
                             <div
-                                class="p-4 text-center border-r border-slate-100 font-black text-xs uppercase tracking-widest text-slate-500">
+                                class="p-4 text-center border-r border-slate-100 font-black text-[10px] uppercase tracking-widest text-slate-500">
                                 Mardi</div>
                             <div
-                                class="p-4 text-center border-r border-slate-100 font-black text-xs uppercase tracking-widest text-slate-500">
+                                class="p-4 text-center border-r border-slate-100 font-black text-[10px] uppercase tracking-widest text-slate-500">
                                 Mercredi</div>
                             <div
-                                class="p-4 text-center border-r border-slate-100 font-black text-xs uppercase tracking-widest text-slate-500">
+                                class="p-4 text-center border-r border-slate-100 font-black text-[10px] uppercase tracking-widest text-slate-500">
                                 Jeudi</div>
-                            <div class="p-4 text-center font-black text-xs uppercase tracking-widest text-slate-500">
-                                Vendredi
-                            </div>
+                            <div
+                                class="p-4 text-center font-black text-[10px] uppercase tracking-widest text-slate-500">
+                                Vendredi</div>
                         </div>
 
                         <!-- Calendar Grid -->
-                        <div class="relative h-[600px] overflow-y-auto overflow-x-hidden no-scrollbar">
+                        <div class="relative h-[650px] overflow-y-auto overflow-x-hidden no-scrollbar">
                             <!-- Time Scale & Background Lines -->
                             <div id="calendar-grid-body"
-                                class="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr] h-[1100px] relative">
+                                class="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr] h-[1200px] relative">
                                 <!-- JS will inject lines and hours -->
                             </div>
                             <!-- Entries Layer -->
                             <div id="calendar-entries-layer"
-                                class="absolute top-0 left-[80px] right-0 h-[1100px] pointer-events-none">
+                                class="absolute top-0 left-[60px] right-0 h-[1200px] pointer-events-none">
                                 <!-- JS will inject entry cards here -->
                             </div>
                         </div>
@@ -1823,7 +1829,7 @@
                 gridBody.innerHTML = '';
                 entriesLayer.innerHTML = '';
 
-                // Render Time Scale (8h to 20h)
+                // Render Time Scale (7h to 20h)
                 for (let h = 7; h <= 19; h++) {
                     const hourDiv = document.createElement("div");
                     hourDiv.className = "flex items-center justify-center border-r border-b border-slate-100 text-[10px] font-bold text-slate-400 bg-slate-50/30";
@@ -1833,7 +1839,9 @@
                     // Add horizontal lines across days
                     for (let d = 0; d < 5; d++) {
                         const slot = document.createElement("div");
-                        slot.className = "border-r border-b border-slate-50 cursor-crosshair hover:bg-blue-50/30 transition-colors";
+                        slot.className = "border-r border-b border-slate-50 cursor-crosshair hover:bg-blue-50/30 transition-colors relative group/slot";
+                        // Visual cue for clickable slot
+                        slot.innerHTML = `<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/slot:opacity-100 transition-opacity"><svg class="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></div>`;
                         slot.onclick = () => openModal('T_SmnType', null, { day: d, hour: h });
                         gridBody.appendChild(slot);
                     }
@@ -1856,19 +1864,20 @@
                     const [h, m] = timeStr.split(':').map(Number);
                     if (isNaN(h)) return;
 
-                    const top = ((h - 7) * 60 + (m || 0)) * (1100 / (13 * 60));
+                    // Calc position (1200px height for 13 hours: 7 to 20)
+                    const top = ((h - 7) * 60 + (m || 0)) * (1200 / (13 * 60));
                     const left = (dayIdx * 20) + '%';
                     const width = '20%';
 
                     const card = document.createElement("div");
-                    card.className = "absolute p-1 pointer-events-auto cursor-pointer group";
+                    card.className = "absolute p-1 pointer-events-auto cursor-pointer group/card";
                     card.style.top = `${top}px`;
                     card.style.left = left;
                     card.style.width = width;
                     card.style.zIndex = 20;
 
                     card.innerHTML = `
-                    <div onclick="openModal('T_SmnType', ${idx})" class="h-full bg-blue-50 border-l-4 border-blue-500 rounded-lg p-2 shadow-sm group-hover:shadow-md transition-all">
+                    <div onclick="openModal('T_SmnType', ${idx})" class="h-full bg-blue-50 border-l-4 border-blue-500 rounded-lg p-2 shadow-sm group-hover/card:shadow-md transition-all">
                         <p class="text-[9px] font-black text-blue-600 truncate">${timeStr}</p>
                         <p class="text-[10px] font-bold text-slate-800 leading-tight line-clamp-2">${client}</p>
                         <p class="text-[9px] font-medium text-blue-400 truncate mt-1">${matière}</p>
