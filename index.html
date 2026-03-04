@@ -1350,14 +1350,22 @@
 
             function setReportingDefaultFilters() {
                 const now = new Date();
-                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-                const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+                // Use local date components instead of UTC to avoid day-shift via ISOString
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+                const formatDate = (d) => {
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                };
 
                 const startInput = document.getElementById('rep-client-start');
                 const endInput = document.getElementById('rep-client-end');
 
-                if (startInput) startInput.value = startOfMonth;
-                if (endInput) endInput.value = endOfMonth;
+                if (startInput) startInput.value = formatDate(startOfMonth);
+                if (endInput) endInput.value = formatDate(endOfMonth);
             }
 
             async function resolveSiteAndWorkbook() {
@@ -1841,53 +1849,54 @@
             /**
              * CALENDAR LOGIC
              */
-            function renderCalendar(rows) {
+            function renderCalendarGrid() {
                 const gridBody = document.getElementById("calendar-grid-body");
-                const entriesLayer = document.getElementById("calendar-entries-layer");
-                const clientFilter = document.getElementById("filter-semaine-client")?.value;
-                if (!gridBody || !entriesLayer) return;
-
+                if (!gridBody) return;
                 gridBody.innerHTML = '';
-                entriesLayer.innerHTML = '';
-
-                // Render Time Scale (8h to 16h)
                 gridBody.style.gridTemplateRows = "repeat(9, 1fr)";
+
                 for (let h = 8; h <= 16; h++) {
                     const hourDiv = document.createElement("div");
                     hourDiv.className = "flex items-center justify-center border-r border-b border-slate-200 text-[11px] font-black text-slate-700 bg-slate-50";
                     hourDiv.innerText = `${h}:00`;
                     gridBody.appendChild(hourDiv);
 
-                    // Add horizontal lines across days
                     for (let d = 0; d < 5; d++) {
                         const slot = document.createElement("div");
                         slot.className = "border-r border-b border-slate-100 cursor-crosshair hover:bg-blue-50/50 transition-colors relative group/slot";
-                        // Visual cue for clickable slot
                         slot.innerHTML = `<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/slot:opacity-100 transition-opacity"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></div>`;
                         slot.onclick = () => openModal('T_SmnType', null, { day: d, hour: h });
                         gridBody.appendChild(slot);
                     }
                 }
+            }
+
+            function renderCalendar(rows) {
+                renderCalendarGrid(); // Always render grid structure first
+
+                const entriesLayer = document.getElementById("calendar-entries-layer");
+                const clientFilter = document.getElementById("filter-semaine-client")?.value;
+                if (!entriesLayer) return;
+
+                entriesLayer.innerHTML = '';
+                if (!rows) return;
 
                 // Render Entries
                 rows.forEach((row, idx) => {
                     const vals = row.values[0];
-                    const dayStr = vals[1]; // Lundi, Mardi...
-                    const timeStr = vals[2]; // HH:MM
+                    const dayStr = vals[1];
+                    const timeStr = vals[2];
                     const client = vals[4];
                     const matière = vals[5];
 
-                    // Client Filter
                     if (clientFilter && client !== clientFilter) return;
 
                     const dayIdx = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'].indexOf(dayStr);
                     if (dayIdx === -1) return;
 
                     const [h, m] = timeStr.split(':').map(Number);
-                    if (isNaN(h)) return;
+                    if (isNaN(h) || h < 8 || h > 16) return;
 
-                    // Calc position (1200px height for 8 hours: 8 to 16)
-                    if (h < 8 || h > 16) return; // Hide outside range
                     const top = ((h - 8) * 60 + (m || 0)) * (1200 / (8 * 60));
                     const left = (dayIdx * 20) + '%';
                     const width = '20%';
@@ -2314,6 +2323,11 @@
                     } else {
                         populateReportingClientSelect();
                     }
+                }
+
+                if (tabId === 'tab-semaine') {
+                    renderCalendarGrid();
+                    if (cachedData['T_SmnType']) renderCalendar(cachedData['T_SmnType']);
                 }
 
                 if (tabId === 'tab-parametres') switchSettingsTable('T_MP');
