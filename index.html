@@ -58,6 +58,68 @@
             background: #f8fafc;
             z-index: 10;
         }
+
+        /* Detailed Contact View Styles */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 1.5rem;
+            height: calc(100vh - 200px);
+        }
+
+        .detail-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border: 1px solid #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .detail-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .detail-card-title {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #0f172a;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .data-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .data-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .accordion-active .accordion-content {
+            max-height: 500px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 
@@ -178,36 +240,134 @@
 
             <!-- TAB: Clients -->
             <div id="tab-clients" class="tab-pane hidden space-y-4">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
-                    <div class="flex items-center gap-4 w-full md:w-auto">
-                        <h2 class="text-xl font-black text-slate-900">Base Contacts</h2>
-                        <div class="relative w-full md:w-64">
-                            <input type="text" placeholder="Rechercher..."
-                                onkeyup="filterTable('T_Clients', this.value)"
-                                class="w-full bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-xl px-10 py-2 text-sm font-semibold outline-none transition-all">
-                            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z"></path>
+                <!-- CLIENT LIST VIEW -->
+                <div id="clients-list-view" class="space-y-4">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
+                        <div class="flex items-center gap-4 w-full md:w-auto">
+                            <h2 class="text-xl font-black text-slate-900">Base Contacts</h2>
+                            <div class="relative w-full md:w-64">
+                                <input type="text" placeholder="Rechercher..."
+                                    onkeyup="filterTable('T_Clients', this.value)"
+                                    class="w-full bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-xl px-10 py-2 text-sm font-semibold outline-none transition-all">
+                                <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <button onclick="openModal('T_Clients')"
+                            class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
+                            Contact
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="sticky-thead border-b border-slate-100">
+                                <tr id="table-head-clients"></tr>
+                            </thead>
+                            <tbody id="table-body-clients" class="divide-y divide-slate-50 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- CLIENT DETAIL VIEW -->
+                <div id="client-detail-view" class="hidden space-y-6">
+                    <div class="flex items-center gap-4 px-2">
+                        <button onclick="closeClientDetail()"
+                            class="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                        <div>
+                            <h2 id="detail-client-name" class="text-2xl font-black text-slate-900">Chargement...</h2>
+                            <p id="detail-client-group"
+                                class="text-sm text-slate-400 font-bold uppercase tracking-widest"></p>
                         </div>
                     </div>
-                    <button onclick="openModal('T_Clients')"
-                        class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        Contact
-                    </button>
-                </div>
-                <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="sticky-thead border-b border-slate-100">
-                            <tr id="table-head-clients"></tr>
-                        </thead>
-                        <tbody id="table-body-clients" class="divide-y divide-slate-50 text-sm"></tbody>
-                    </table>
+
+                    <div class="detail-grid">
+                        <!-- TOP LEFT: Client Data -->
+                        <div class="detail-card flex flex-col">
+                            <div class="detail-card-header">
+                                <span class="detail-card-title">Données Client</span>
+                                <button onclick="editCurrentClient()"
+                                    class="text-blue-600 hover:text-blue-700 text-xs font-bold uppercase tracking-widest">Modifier</button>
+                            </div>
+                            <div id="detail-data-container"
+                                class="grid grid-cols-2 gap-x-6 gap-y-4 overflow-y-auto pr-2 no-scrollbar">
+                                <!-- Categorized data will be injected here -->
+                                <div class="col-span-full py-12 text-center text-slate-400 italic">Veuillez patienter...
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TOP RIGHT: Prospection History -->
+                        <div class="detail-card flex flex-col">
+                            <div class="detail-card-header">
+                                <span class="detail-card-title">Suivi Prospection</span>
+                                <button onclick="openModal('T_Prospection', null, { client: currentDetailClientName })"
+                                    class="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase">+
+                                    Nouveau</button>
+                            </div>
+                            <div id="detail-prospection-list" class="space-y-3 overflow-y-auto pr-2 no-scrollbar">
+                                <div class="py-12 text-center text-slate-400 italic">Aucun historique de prospection.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BOTTOM LEFT: Uploaded Documents -->
+                        <div class="detail-card flex flex-col">
+                            <div class="detail-card-header">
+                                <span class="detail-card-title">Documents Uploadés</span>
+                                <label
+                                    class="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase cursor-pointer">
+                                    <input type="file" class="hidden" accept=".pdf"
+                                        onchange="uploadContactFileDetail(this)">
+                                    + Ajouter
+                                </label>
+                            </div>
+                            <div id="detail-docs-list" class="grid grid-cols-1 gap-2 overflow-y-auto pr-2 no-scrollbar">
+                                <div class="py-12 text-center text-slate-400 italic">Chargement des documents...</div>
+                            </div>
+                        </div>
+
+                        <!-- BOTTOM RIGHT: Collections Follow-up -->
+                        <div class="detail-card flex flex-col">
+                            <div class="detail-card-header">
+                                <span class="detail-card-title">Suivi des Collectes</span>
+                                <div class="flex gap-2">
+                                    <span id="stat-total-qty"
+                                        class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg text-[10px] font-black uppercase">0
+                                        kg</span>
+                                </div>
+                            </div>
+                            <div id="detail-collectes-list" class="overflow-y-auto pr-2 no-scrollbar">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="sticky top-0 bg-white border-b border-slate-100 z-10">
+                                        <tr>
+                                            <th class="py-2 font-black text-slate-400 uppercase tracking-tighter">Date
+                                            </th>
+                                            <th class="py-2 font-black text-slate-400 uppercase tracking-tighter">
+                                                Matière</th>
+                                            <th
+                                                class="py-2 font-black text-slate-400 uppercase tracking-tighter text-right">
+                                                Qté</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detail-collectes-body" class="divide-y divide-slate-50">
+                                        <!-- Collectes injected here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -904,6 +1064,7 @@
 
                 tr.innerHTML = cellsContent + `
                     <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap sticky right-0 bg-white/90 backdrop-blur group-hover:bg-slate-50/95 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">
+                        ${tableName === 'T_Clients' ? `<button onclick="viewClient(${originalIdx})" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Détails"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>` : ''}
                         <button onclick="openModal('${tableName}', ${originalIdx})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
                         <button onclick="deleteEntry('${tableName}', ${originalIdx})" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                     </td>
@@ -963,6 +1124,238 @@
                 );
             });
             renderTable(tableName, filtered);
+        }
+
+        /**
+         * DETAILED CLIENT VIEW LOGIC
+         */
+        let currentDetailClientName = null;
+        let currentDetailClientIdx = null;
+
+        async function viewClient(rowIndex) {
+            const row = cachedData['T_Clients'][rowIndex];
+            const vals = row.values[0];
+            currentDetailClientIdx = rowIndex;
+            currentDetailClientName = vals[1];
+
+            document.getElementById("clients-list-view").classList.add("hidden");
+            document.getElementById("client-detail-view").classList.remove("hidden");
+
+            document.getElementById("detail-client-name").innerText = currentDetailClientName;
+            document.getElementById("detail-client-group").innerText = vals[2] || 'SANS GROUPE';
+
+            loadClientDetailData(rowIndex);
+        }
+
+        function closeClientDetail() {
+            document.getElementById("client-detail-view").classList.add("hidden");
+            document.getElementById("clients-list-view").classList.remove("hidden");
+            currentDetailClientName = null;
+            currentDetailClientIdx = null;
+        }
+
+        async function loadClientDetailData(rowIndex) {
+            const clientRow = cachedData['T_Clients'][rowIndex];
+            const vals = clientRow.values[0];
+            const config = TABLE_CONFIG['T_Clients'];
+
+            // 1. Data Sections
+            const dataContainer = document.getElementById("detail-data-container");
+            const categories = {
+                "Général": [0, 1, 2, 10], // ID, Nom, Groupe, Client ?
+                "Coordonnées": [3, 4, 5, 6, 7, 8], // Adresse, CP, Ville, Tel, Mail
+                "Planning": [11, 12, 13, 14, 15] // Ramasses
+            };
+
+            dataContainer.innerHTML = Object.entries(categories).map(([cat, indices]) => `
+                <div class="col-span-full border-l-2 border-slate-100 pl-3 mb-2 mt-4 first:mt-0">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${cat}</span>
+                </div>
+                ${indices.map(i => {
+                const col = config.cols[i];
+                let val = vals[i] || '-';
+                if (col.type === 'checkbox') {
+                    const isChecked = val === true || val === 'VRAI' || val === 'TRUE';
+                    val = isChecked ? '<span class="text-emerald-600">OUI</span>' : '<span class="text-slate-300">NON</span>';
+                }
+                return `
+                        <div class="space-y-0.5">
+                            <p class="data-label">${col.name}</p>
+                            <p class="data-value">${val}</p>
+                        </div>
+                    `;
+            }).join('')}
+            `).join('');
+
+            // 2. Load Prospection
+            loadClientProspection(currentDetailClientName);
+
+            // 3. Load Documents
+            loadContactDocumentsDetail(currentDetailClientName);
+
+            // 4. Load Collectes
+            loadClientCollectes(currentDetailClientName);
+        }
+
+        async function loadClientProspection(clientName) {
+            const list = document.getElementById("detail-prospection-list");
+            if (!cachedData['T_Prospection']) await loadTableData('T_Prospection');
+            const history = (cachedData['T_Prospection'] || []).filter(r => r.values[0][1] === clientName);
+
+            if (history.length === 0) {
+                list.innerHTML = `<div class="py-12 text-center text-slate-400 italic">Aucun historique de prospection.</div>`;
+                return;
+            }
+
+            // Group by date and sort descending
+            const sortedHistory = [...history].sort((a, b) => b.values[0][2] - a.values[0][2]);
+
+            list.innerHTML = sortedHistory.map((r, i) => {
+                const vals = r.values[0];
+                const dateContact = vals[2] ? new Date((vals[2] - 25569) * 86400 * 1000).toLocaleDateString('fr-FR') : 'Date inconnue';
+                const status = vals[4] || 'Prospect';
+                const comments = vals[5] || 'Pas de commentaire.';
+
+                return `
+                    <div class="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden divide-y divide-slate-100">
+                        <button onclick="this.parentElement.classList.toggle('accordion-active')" class="w-full flex justify-between items-center p-4 hover:bg-slate-100/50 transition-colors text-left group">
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">${dateContact}</span>
+                                <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ${status === 'Signé' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}">${status}</span>
+                            </div>
+                            <svg class="w-4 h-4 text-slate-300 transition-transform group-[.accordion-active]:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content bg-white">
+                            <div class="p-4 text-[11px] font-medium text-slate-600 leading-relaxed italic border-t border-slate-50">
+                                ${comments}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function loadClientCollectes(clientName) {
+            const body = document.getElementById("detail-collectes-body");
+            const statQty = document.getElementById("stat-total-qty");
+            if (!cachedData['T_Ramasses']) await loadTableData('T_Ramasses');
+            const history = (cachedData['T_Ramasses'] || []).filter(r => r.values[0][3] === clientName);
+
+            if (history.length === 0) {
+                body.innerHTML = `<tr><td colspan="3" class="py-12 text-center text-slate-400 italic">Aucune ramasse enregistrée.</td></tr>`;
+                statQty.innerText = '0 kg';
+                return;
+            }
+
+            let totalQty = 0;
+            const sorted = history.sort((a, b) => b.values[0][1] - a.values[0][1]).slice(0, 20);
+
+            body.innerHTML = sorted.map(r => {
+                const vals = r.values[0];
+                const date = vals[1] ? new Date((vals[1] - 25569) * 86400 * 1000).toLocaleDateString('fr-FR') : '-';
+                const matiere = vals[2] || '-';
+                const qty = parseFloat(vals[4]) || 0;
+                totalQty += qty;
+
+                return `
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="py-3 font-semibold text-slate-500">${date}</td>
+                        <td class="py-3 font-bold text-slate-700">${matiere}</td>
+                        <td class="py-3 font-bold text-blue-600 text-right">${qty} kg</td>
+                    </tr>
+                `;
+            }).join('');
+
+            statQty.innerText = `${Math.round(totalQty)} kg`;
+        }
+
+        async function loadContactDocumentsDetail(contactName) {
+            const listContainer = document.getElementById("detail-docs-list");
+            if (!listContainer) return;
+
+            try {
+                const token = await getToken();
+                const folderPath = encodeURIComponent(`Application/Documents_Contacts/${contactName}`);
+                const res = await fetch(`${resolvedDriveBaseUrl}/root:/${folderPath}:/children`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (res.status === 404 || !res.ok) {
+                    listContainer.innerHTML = `<div class="py-12 text-center text-slate-400 italic text-xs">Aucun document.</div>`;
+                    return;
+                }
+
+                const data = await res.json();
+                if (data.value.length === 0) {
+                    listContainer.innerHTML = `<div class="py-12 text-center text-slate-400 italic text-xs">Aucun document.</div>`;
+                } else {
+                    listContainer.innerHTML = data.value.map(file => `
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl group hover:bg-white hover:shadow-sm transition-all border border-slate-100">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <div class="w-8 h-8 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                </div>
+                                <span class="text-xs font-bold text-slate-700 truncate">${file.name}</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <a href="${file['@microsoft.graph.downloadUrl']}" target="_blank" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                </a>
+                                <button onclick="deleteContactDocumentDetail('${file.id}', '${contactName}')" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                listContainer.innerHTML = `<div class="py-12 text-center text-rose-500 italic text-xs">Erreur de chargement.</div>`;
+            }
+        }
+
+        async function uploadContactFileDetail(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const contactName = currentDetailClientName;
+            try {
+                const token = await getToken();
+                const fileName = encodeURIComponent(file.name);
+                const folderPath = encodeURIComponent(`Application/Documents_Contacts/${contactName}`);
+                const res = await fetch(`${resolvedDriveBaseUrl}/root:/${folderPath}/${fileName}:/content`, {
+                    method: "PUT",
+                    headers: { "Authorization": `Bearer ${token}`, "Content-Type": file.type },
+                    body: file
+                });
+                if (res.ok) {
+                    showToast("Document uploadé ! 📄", "success");
+                    loadContactDocumentsDetail(contactName);
+                }
+            } catch (err) {
+                showToast("Erreur upload: " + err.message, "error");
+            }
+        }
+
+        async function deleteContactDocumentDetail(fileId, contactName) {
+            if (!confirm("Supprimer ce document ?")) return;
+            try {
+                const token = await getToken();
+                const res = await fetch(`${resolvedDriveBaseUrl}/items/${fileId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (res.status === 204 || res.ok) {
+                    showToast("Document supprimé", "success");
+                    loadContactDocumentsDetail(contactName);
+                }
+            } catch (err) {
+                showToast("Erreur suppression: " + err.message, "error");
+            }
+        }
+
+        function editCurrentClient() {
+            if (currentDetailClientIdx !== null) {
+                openModal('T_Clients', currentDetailClientIdx);
+            }
         }
 
         /**
@@ -1421,6 +1814,9 @@
 
             if (tabId === 'tab-parametres') {
                 switchSettingsTable('T_MP');
+            }
+            if (tabId === 'tab-clients') {
+                closeClientDetail();
             }
         }
 
