@@ -1256,8 +1256,7 @@
                         { name: 'Index', type: 'number', readonly: true },
                         { name: 'Jour', type: 'select', options: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'] },
                         { name: 'Heure', type: 'text', placeholder: 'HH:MM' },
-                        { name: 'N° Client', type: 'number', readonly: true },
-                        { name: 'Client', type: 'select', optionsTable: 'T_Clients', optionLabelIndex: 1 },
+                        { name: 'N° Client', type: 'select', optionsTable: 'T_Clients', optionLabelIndex: 1, valueIndex: 0 },
                         { name: 'Matière collect', type: 'select', optionsTable: 'T_MP', optionLabelIndex: 1 },
                         { name: 'ordre', type: 'number', default: 1 }
                     ]
@@ -1973,11 +1972,12 @@
                     } else if (col.type === 'date') {
                         // Convert Excel serial to YYYY-MM-DD for input[type=date] if editing
                         let dateStr = '';
+                        const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                         if (val && !isNaN(val)) {
                             const d = new Date((val - 25569) * 86400 * 1000);
-                            dateStr = d.toISOString().split('T')[0];
+                            dateStr = fmt(d);
                         } else if (!val && rowIndex === null) {
-                            dateStr = new Date().toISOString().split('T')[0];
+                            dateStr = fmt(new Date());
                         } else {
                             dateStr = val;
                         }
@@ -2132,15 +2132,26 @@
 
             async function populateSelect(select, tableName, labelIdx, selectedVal) {
                 if (!tableName) return;
+                const config = Object.values(TABLE_CONFIG).find(c => c.optionsTable === tableName) ||
+                    TABLE_CONFIG[currentModalState ? currentModalState.table : '']?.cols.find(c => c.optionsTable === tableName);
+                // More robust way to find valueIndex: pass it or find it from current col
+                // Since populateSelect only knows tableName, let's find the col in currentModalState
+                let valueIdx = labelIdx;
+                if (currentModalState) {
+                    const col = TABLE_CONFIG[currentModalState.table].cols.find(c => c.optionsTable === tableName);
+                    if (col && col.valueIndex !== undefined) valueIdx = col.valueIndex;
+                }
+
                 if (!cachedData[tableName]) await loadTableData(tableName);
                 const rows = cachedData[tableName] || [];
                 select.innerHTML = '<option value="">Choisir...</option>';
                 rows.forEach(r => {
                     const label = r.values[0][labelIdx];
+                    const val = r.values[0][valueIdx];
                     const opt = document.createElement("option");
-                    opt.value = label;
+                    opt.value = val;
                     opt.textContent = label;
-                    if (label === selectedVal) opt.selected = true;
+                    if (val == selectedVal || label == selectedVal) opt.selected = true;
                     select.appendChild(opt);
                 });
             }
@@ -2176,23 +2187,8 @@
                             if (tableName === 'T_Ramasses' && ids.length === 0) val = 104000;
                         }
 
-                        // Specific mapping for ST : client name to client ID
-                        if (tableName === 'T_SmnType' && col.name === 'N° Client') {
-                            const clientName = fd.get('col_4');
-                            const clientRows = cachedData['T_Clients'] || [];
-                            const client = clientRows.find(r => r.values[0][1] === clientName);
-                            val = client ? client.values[0][0] : 0;
-                        }
-
                         values.push(val);
                     }
-
-                    // Auto-fill Client Name for T_Prospection display if we had it (but the current render logic uses row.values)
-                    // The current app design stores what's in 'values'. 
-                    // In T_Prospection, column 1 is 'N° Client'. Let's see if we should store name or ID.
-                    // The screenshot shows "N° Client" but the headers I proposed were labels.
-                    // I will stick to what the user implemented in Excel (N° Prospect, N° Client, Date contact, Date relance, Statut, Commentaires)
-
                     // Debugging dimension mismatch
                     console.log(`Enregistrement ${tableName}. Colonnes attendues: ${config.cols.length}. Données fournies:`, values);
 
@@ -2420,13 +2416,14 @@
                     // 1. Text Query
                     const matchQuery = !query || vals.some(v => normalizeStr(v).includes(normalizeStr(query)));
 
-                    // 2. Date
+                    // 2. Date (Local time fix)
                     let matchDate = true;
                     if (dateVal) {
                         const dateColIdx = config.cols.findIndex(c => c.type === 'date');
                         if (dateColIdx !== -1) {
                             const rawDate = vals[dateColIdx];
-                            const rowDate = new Date((rawDate - 25569) * 86400 * 1000).toISOString().split('T')[0];
+                            const d = new Date((rawDate - 25569) * 86400 * 1000);
+                            const rowDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                             matchDate = rowDate === dateVal;
                         }
                     }
@@ -2547,8 +2544,9 @@
                 }
 
                 if (start && end) {
-                    startInput.value = start.toISOString().split('T')[0];
-                    endInput.value = end.toISOString().split('T')[0];
+                    const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    startInput.value = fmt(start);
+                    endInput.value = fmt(end);
                     updateReportingClient();
                 }
             }
@@ -2572,10 +2570,14 @@
                 }
 
                 const filterDate = (rows, dateIdx) => {
+                    if (!start && !end) return rows;
+                    const startD = start ? new Date(start + "T00:00:00") : null;
+                    const endD = end ? new Date(end + "T23:59:59") : null;
+
                     return rows.filter(r => {
                         const d = new Date((r.values[0][dateIdx] - 25569) * 86400 * 1000);
-                        if (start && d < new Date(start)) return false;
-                        if (end && d > new Date(end)) return false;
+                        if (startD && d < startD) return false;
+                        if (endD && d > endD) return false;
                         return true;
                     });
                 };
