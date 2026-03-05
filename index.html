@@ -1257,8 +1257,9 @@
                         { name: 'Jour', type: 'select', options: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'] },
                         { name: 'Heure', type: 'text', placeholder: 'HH:MM' },
                         { name: 'N° Client', type: 'select', optionsTable: 'T_Clients', optionLabelIndex: 1, valueIndex: 0 },
-                        { name: 'Matière collect', type: 'select', optionsTable: 'T_MP', optionLabelIndex: 1 },
-                        { name: 'ordre', type: 'number', default: 1 }
+                        { name: 'Matière collectée', type: 'select', optionsTable: 'T_MP', optionLabelIndex: 1 },
+                        { name: 'ordre', type: 'number', default: 1 },
+                        { name: 'Equipe', type: 'select', options: ['Equipe 1', 'Equipe 2', 'Equipe 3'] }
                     ]
                 },
                 'T_Prospection': {
@@ -1885,19 +1886,23 @@
                 if (!rows) return;
 
                 // Render Entries
+                const slots = {}; // Group by Day-Hour-Minute
+
                 rows.forEach((row, idx) => {
                     const vals = row.values[0];
                     const dayStr = vals[1];   // Jour
-                    const timeVal = vals[2];  // Heure (can be "HH:MM" or Excel number)
+                    const timeVal = vals[2];  // Heure
                     const clientId = vals[3]; // N° Client (ID)
-                    const matière = vals[4];  // Matière collect
+                    const matière = vals[4];  // Matière collectée
+                    const ordre = vals[5];    // Ordre
+                    const equipe = vals[6];   // Equipe
 
                     if (clientFilter && clientId !== clientFilter) return;
 
                     const dayIdx = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'].indexOf(dayStr);
                     if (dayIdx === -1) return;
 
-                    // Robust time parsing
+                    // Time parsing
                     let h, m;
                     if (typeof timeVal === 'number') {
                         const totalMinutes = Math.round(timeVal * 1440);
@@ -1905,36 +1910,51 @@
                         m = totalMinutes % 60;
                     } else if (typeof timeVal === 'string' && timeVal.includes(':')) {
                         [h, m] = timeVal.split(':').map(Number);
-                    } else {
-                        return; // Invalid time format
-                    }
+                    } else { return; }
 
                     if (isNaN(h) || h < 8 || h > 16) return;
 
-                    // Client Name Lookup
-                    const clients = cachedData['T_Clients'] || [];
-                    const client = clients.find(c => c.values[0][0] == clientId)?.values[0][1] || `Client #${clientId}`;
+                    const slotKey = `${dayIdx}-${h}-${m || 0}`;
+                    if (!slots[slotKey]) slots[slotKey] = [];
+                    slots[slotKey].push({ row, idx, h, m: m || 0, dayIdx, clientId, matière, equipe });
+                });
 
-                    const top = ((h - 8) * 60 + (m || 0)) * (1200 / (8 * 60));
-                    const left = (dayIdx * 20) + '%';
-                    const width = '20%';
+                // Display Grouped Slots
+                Object.values(slots).forEach(slotEntries => {
+                    const count = slotEntries.length;
+                    const cardWidthPercent = 20 / count;
 
-                    const card = document.createElement("div");
-                    card.className = "absolute p-1 pointer-events-auto cursor-pointer group/card";
-                    card.style.top = `${top}px`;
-                    card.style.left = left;
-                    card.style.width = width;
-                    card.style.zIndex = 20;
+                    slotEntries.forEach((entry, i) => {
+                        const { idx, h, m, dayIdx, clientId, matière, equipe } = entry;
+                        const clients = cachedData['T_Clients'] || [];
+                        const clientName = clients.find(c => c.values[0][0] == clientId)?.values[0][1] || `Client #${clientId}`;
 
-                    const timeDisplay = `${String(h).padStart(2, '0')}:${String(m || 0).padStart(2, '0')}`;
-                    card.innerHTML = `
-                    <div onclick="openModal('T_SmnType', ${idx})" class="h-full bg-blue-50 border-l-4 border-blue-500 rounded-lg p-2 shadow-sm group-hover/card:shadow-md transition-all">
-                        <p class="text-[9px] font-black text-blue-600 truncate">${timeDisplay}</p>
-                        <p class="text-[10px] font-bold text-slate-800 leading-tight line-clamp-2">${client}</p>
-                        <p class="text-[9px] font-medium text-blue-400 truncate mt-1">${matière}</p>
-                    </div>
-                `;
-                    entriesLayer.appendChild(card);
+                        const top = ((h - 8) * 60 + m) * (1200 / (8 * 60));
+                        const left = (dayIdx * 20) + (i * cardWidthPercent) + '%';
+                        const width = cardWidthPercent + '%';
+
+                        const card = document.createElement("div");
+                        card.className = "absolute p-0.5 pointer-events-auto cursor-pointer group/card";
+                        card.style.top = `${top}px`;
+                        card.style.left = left;
+                        card.style.width = width;
+                        card.style.zIndex = 20;
+
+                        const timeDisplay = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                        const equipeColor = equipe?.includes('2') ? 'emerald' : equipe?.includes('3') ? 'amber' : 'blue';
+
+                        card.innerHTML = `
+                        <div onclick="openModal('T_SmnType', ${idx})" class="h-full bg-${equipeColor}-50 border-l-4 border-${equipeColor}-500 rounded-lg p-1.5 shadow-sm group-hover/card:shadow-md transition-all overflow-hidden">
+                            <div class="flex items-center justify-between gap-1 mb-0.5">
+                                <span class="text-[8px] font-black text-${equipeColor}-600 uppercase tabular-nums">${timeDisplay}</span>
+                                <span class="text-[7px] font-bold text-slate-400 truncate">${equipe || ''}</span>
+                            </div>
+                            <p class="text-[9px] font-bold text-slate-800 leading-tight line-clamp-2">${clientName}</p>
+                            <p class="text-[8px] font-medium text-slate-500 truncate mt-0.5">${matière}</p>
+                        </div>
+                    `;
+                        entriesLayer.appendChild(card);
+                    });
                 });
             }
 
