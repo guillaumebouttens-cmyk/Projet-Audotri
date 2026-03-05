@@ -253,13 +253,13 @@
                         <button onclick="switchTab('tab-ramasses')" id="btn-ramasses"
                             class="nav-item !px-2 text-[10px]">🚛 Ramasses</button>
                         <button onclick="switchTab('tab-production')" id="btn-production"
-                            class="nav-item !px-2 text-[10px]">🏭 Production</button>
+                            class="nav-item !px-2 text-[10px]">🛠️ Production</button>
                         <button onclick="switchTab('tab-departs')" id="btn-departs"
-                            class="nav-item !px-2 text-[10px]">📦 Départs</button>
-                        <button onclick="switchTab('tab-incidents')" id="btn-incidents"
-                            class="nav-item !px-2 text-[10px]">⚠️ Incidents</button>
+                            class="nav-item !px-2 text-[10px]">🚚 Départs</button>
+                        <button onclick="switchTab('tab-planning')" id="btn-planning"
+                            class="nav-item !px-2 text-[10px]">📅 Planning</button>
                         <button onclick="switchTab('tab-semaine')" id="btn-semaine"
-                            class="nav-item !px-2 text-[10px]">📅 Semaine Type</button>
+                            class="nav-item !px-2 text-[10px]">🗓️ Semaine Type</button>
                     </div>
                 </div>
 
@@ -928,14 +928,25 @@
                                 <option value="">Client: Tous</option>
                             </select>
                         </div>
-                        <button onclick="openModal('T_SmnType')"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-50 transition-all active:scale-95 text-xs">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                            Créneau
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="loadTableData('T_SmnType')"
+                                class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                                title="Rafraîchir">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                    </path>
+                                </svg>
+                            </button>
+                            <button onclick="openModal('T_SmnType')"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-50 transition-all active:scale-95 text-xs">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Créneau
+                            </button>
+                        </div>
                     </div>
 
 
@@ -981,6 +992,50 @@
                         </div>
                     </div>
                 </div>
+
+
+                <!-- TAB: Planning -->
+                <div id="tab-planning" class="tab-pane hidden space-y-2">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 px-1">
+                        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                            <h2 class="text-lg font-black text-slate-900">Planning Interventions</h2>
+                            <div class="flex items-center gap-2">
+                                <input type="date" id="filter-planning-date" onchange="runGenericFilter('T_Planning')"
+                                    class="bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-lg px-2 py-1 text-[10px] font-bold outline-none text-slate-600">
+                                <select id="filter-planning-client" onchange="runGenericFilter('T_Planning')"
+                                    class="bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-lg px-2 py-1 text-[10px] font-bold outline-none text-slate-600">
+                                    <option value="">Client: Tous</option>
+                                </select>
+                            </div>
+                            <div class="relative w-48">
+                                <input type="text" placeholder="Rechercher..."
+                                    onkeyup="runGenericFilter('T_Planning', this.value)"
+                                    class="w-full bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-xl px-8 py-1.5 text-xs font-semibold outline-none transition-all">
+                                <svg class="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <button onclick="openModal('T_Planning')"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-50 transition-all active:scale-95 text-xs shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Intervention
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-100 table-container">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="sticky-thead border-b border-slate-100">
+                                <tr id="table-head-planning"></tr>
+                            </thead>
+                            <tbody id="table-body-planning" class="divide-y divide-slate-50 text-[11px]"></tbody>
+                        </table>
+                    </div>
+                </div>
+
 
                 <!-- TAB: Paramètres -->
                 <div id="tab-parametres" class="tab-pane hidden space-y-6">
@@ -1113,6 +1168,11 @@
         </div>
 
         <script shadow-dom="false">
+            /**
+             * UTILS
+             */
+            const normalizeStr = (str) => str ? str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "") : "";
+
             /**
              * CONFIGURATION
              */
@@ -1260,6 +1320,20 @@
                         { name: 'Matière collectée', type: 'select', optionsTable: 'T_MP', optionLabelIndex: 1 },
                         { name: 'ordre', type: 'number', default: 1 },
                         { name: 'Equipe', type: 'select', options: ['Equipe 1', 'Equipe 2', 'Equipe 3'] }
+                    ]
+                },
+                'T_Planning': {
+                    title: 'Planning (Interventions)',
+                    idPrefix: 'PL',
+                    cols: [
+                        { name: 'Index', type: 'number', readonly: true },
+                        { name: 'Date', type: 'date' },
+                        { name: 'Heure', type: 'text', placeholder: 'HH:MM' },
+                        { name: 'N° Client', type: 'select', optionsTable: 'T_Clients', optionLabelIndex: 1, valueIndex: 0 },
+                        { name: 'Matière', type: 'select', optionsTable: 'T_MP', optionLabelIndex: 1 },
+                        { name: 'Equipe', type: 'select', options: ['Equipe 1', 'Equipe 2', 'Equipe 3'] },
+                        { name: 'Statut', type: 'select', options: ['Planifié', 'En cours', 'Réalisé', 'Annulé'] },
+                        { name: 'Commentaires', type: 'textarea' }
                     ]
                 },
                 'T_Prospection': {
@@ -1455,6 +1529,8 @@
 
                     if (tableName === 'T_SmnType') {
                         renderCalendar(cachedData[tableName]);
+                    } else if (tableName === 'T_Planning') {
+                        renderTable('T_Planning', cachedData[tableName]);
                     } else {
                         // Apply current sort if any
                         const state = sortStates[tableName];
@@ -1971,6 +2047,7 @@
 
                 const form = document.getElementById("dynamic-form");
                 form.innerHTML = '';
+                form.className = "grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4";
 
                 for (let i = 0; i < config.cols.length; i++) {
                     const col = config.cols[i];
@@ -1982,10 +2059,21 @@
                         if (col.name === 'Heure') val = `${String(prefill.hour).padStart(2, '0')}:00`;
                     }
 
-                    const wrapper = document.createElement("div");
-                    wrapper.className = "space-y-2";
+                    // Robust Time Display (Excel serial to HH:MM)
+                    if (col.name === 'Heure' && typeof val === 'number') {
+                        const totalMinutes = Math.round(val * 1440);
+                        const h = Math.floor(totalMinutes / 60);
+                        const m = totalMinutes % 60;
+                        val = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                    }
 
-                    const label = `<label class="text-[10px] font-black uppercase text-slate-400 tracking-widest pl-1">${col.name}</label>`;
+                    const isNew = rowIndex === null;
+                    const isIndexCol = i === 0 && col.name === 'Index';
+
+                    const wrapper = document.createElement("div");
+                    wrapper.className = isIndexCol && isNew ? "hidden" : "space-y-1.5";
+
+                    const label = `<label class="text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1">${col.name}</label>`;
                     let input = '';
 
                     if (col.type === 'checkbox') {
@@ -2017,9 +2105,14 @@
                         } else {
                             dateStr = val;
                         }
-                        input = `<input type="date" name="col_${i}" value="${dateStr}" class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700">`;
+                        input = `<input type="date" name="col_${i}" value="${dateStr}" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm">`;
+                    } else if (col.options || col.type === 'select') {
+                        // Combined select handling for cleaner UI
+                        input = `<select name="col_${i}" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm appearance-none cursor-pointer">
+                                <option value="">Chargement...</option>
+                             </select>`;
                     } else {
-                        input = `<input type="${col.type}" name="col_${i}" value="${val}" ${col.readonly ? 'readonly' : ''} placeholder="${col.placeholder || ''}" class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700 ${col.readonly ? 'opacity-50' : ''}">`;
+                        input = `<input type="${col.type}" name="col_${i}" value="${val}" ${col.readonly ? 'readonly' : ''} placeholder="${col.placeholder || ''}" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm ${col.readonly ? 'opacity-50' : ''}">`;
                     }
 
                     wrapper.innerHTML = label + input;
@@ -2354,7 +2447,8 @@
                     const normK = normalizeStr(k);
                     if (suffix === 'prospection') return normK.includes('prospection');
                     if (suffix === 'departs') return normK.includes('depart');
-                    if (suffix === 'reporting-client') return false; // No direct table for this tab
+                    if (suffix === 'planning') return normK.includes('planning');
+                    if (suffix === 'reporting-client') return false;
                     return normK.includes(suffix.replace(/-/g, ''));
                 });
 
