@@ -251,15 +251,32 @@
                     </div>
                     <div id="group-ops" class="nav-group-content open">
                         <button onclick="switchTab('tab-ramasses')" id="btn-ramasses"
-                            class="nav-item !px-2 text-[10px]">🚛 Ramasses</button>
+                            class="nav-item !px-2 text-[10px]">🚛
+                            Ramasses</button>
                         <button onclick="switchTab('tab-production')" id="btn-production"
                             class="nav-item !px-2 text-[10px]">🛠️ Production</button>
                         <button onclick="switchTab('tab-departs')" id="btn-departs"
-                            class="nav-item !px-2 text-[10px]">🚚 Départs</button>
+                            class="nav-item !px-2 text-[10px]">🚚
+                            Départs</button>
+                    </div>
+                </div>
+
+                <!-- Group: Planning -->
+                <div class="mb-1">
+                    <div class="nav-group-header" onclick="toggleNavGroup('planning-group')">
+                        <span>PLANNING</span>
+                        <svg id="arrow-planning-group" class="w-3 h-3 transition-transform" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    <div id="group-planning-group" class="nav-group-content open">
                         <button onclick="switchTab('tab-planning')" id="btn-planning"
-                            class="nav-item !px-2 text-[10px]">📅 Planning</button>
+                            class="nav-item !px-2 text-[10px]">📅
+                            Planning</button>
                         <button onclick="switchTab('tab-semaine')" id="btn-semaine"
-                            class="nav-item !px-2 text-[10px]">🗓️ Semaine Type</button>
+                            class="nav-item !px-2 text-[10px]">🗓️ Semaine
+                            Type</button>
                     </div>
                 </div>
 
@@ -274,23 +291,18 @@
                     </div>
                     <div id="group-reporting" class="nav-group-content open">
                         <button onclick="switchTab('tab-reporting-client')" id="btn-reporting-client"
-                            class="nav-item tab-active !px-2 text-[10px]">📈 Reporting Client</button>
+                            class="nav-item !px-2 text-[10px]">📈 Reporting Client</button>
                     </div>
                 </div>
-
 
                 <!-- Settings -->
                 <div class="mt-auto px-1">
                     <button onclick="switchTab('tab-parametres')" id="btn-parametres"
-                        class="nav-item !px-2 text-[10px] rounded-xl">⚙️ Paramètres</button>
+                        class="nav-item !px-2 text-[10px]">⚙️ Paramètres</button>
                 </div>
 
-            </nav>
-
-            <div class="p-4 border-t border-gray-100" id="auth-controls">
-                <button id="login-btn" onclick="signIn()"
-                    class="hidden w-full bg-blue-600 text-white py-2 rounded-xl font-bold text-sm">Connexion</button>
-                <div id="user-info" class="hidden flex items-center justify-between">
+                <div id="user-info"
+                    class="hidden flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
                     <div class="overflow-hidden">
                         <p id="username" class="text-xs font-black text-slate-700 truncate"></p>
                         <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Connecté</p>
@@ -303,7 +315,7 @@
                         </svg>
                     </button>
                 </div>
-            </div>
+            </nav>
         </aside>
 
         <!-- Main Content Area -->
@@ -1017,14 +1029,24 @@
                                 </svg>
                             </div>
                         </div>
-                        <button onclick="openModal('T_Planning')"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-50 transition-all active:scale-95 text-xs shrink-0">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                            Intervention
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button onclick="importFromSmnType()"
+                                class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 text-xs shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12"></path>
+                                </svg>
+                                Importer Semaine Type
+                            </button>
+                            <button onclick="openModal('T_Planning')"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-50 transition-all active:scale-95 text-xs shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Intervention
+                            </button>
+                        </div>
                     </div>
                     <div class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-100 table-container">
                         <table class="w-full text-left border-collapse">
@@ -1172,6 +1194,90 @@
              * UTILS
              */
             const normalizeStr = (str) => str ? str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "") : "";
+
+            function toggleNavGroup(groupId) {
+                const content = document.getElementById(`group-${groupId}`);
+                const arrow = document.getElementById(`arrow-${groupId}`);
+                if (!content || !arrow) return;
+                const isOpen = content.classList.contains('open'); // Check for 'open' class
+                if (isOpen) {
+                    content.classList.remove('open'); // Remove 'open' to hide
+                    arrow.classList.remove('rotate-0');
+                    arrow.classList.add('-rotate-90');
+                } else {
+                    content.classList.add('open'); // Add 'open' to show
+                    arrow.classList.remove('-rotate-90');
+                    arrow.classList.add('rotate-0');
+                }
+            }
+
+            function runGenericFilter(tableName, searchTerm = '') {
+                if (!cachedData[tableName]) return;
+                const suffix = normalizeStr(tableName.split('_')[1]);
+                const dateFilter = document.getElementById(`filter-${suffix}-date`)?.value;
+                const clientFilter = document.getElementById(`filter-${suffix}-client`)?.value;
+                const matiereFilter = document.getElementById(`filter-${suffix}-matiere`)?.value; // Added for ramasses/production
+
+                let rows = cachedData[tableName];
+
+                if (dateFilter) {
+                    rows = rows.filter(r => {
+                        let cellVal;
+                        if (tableName === 'T_Planning') {
+                            cellVal = r.values[0][7]; // Date is at index 7 for Planning
+                        } else if (tableName === 'T_Ramasses' || tableName === 'T_Production' || tableName === 'T_Départs' || tableName === 'T_Incidents') {
+                            cellVal = r.values[0][1]; // Date is at index 1 for Ramasses, Production, Départs, Incidents
+                        } else {
+                            return true; // No date filter for other tables
+                        }
+
+                        if (!cellVal) return false;
+                        // Convert Excel serial date to JS Date
+                        const d = new Date((cellVal - 25569) * 86400 * 1000);
+                        const fmt = d.toISOString().split('T')[0];
+                        return fmt === dateFilter;
+                    });
+                }
+
+                if (clientFilter) {
+                    rows = rows.filter(r => {
+                        let clientColIndex;
+                        if (tableName === 'T_Ramasses' || tableName === 'T_Incidents') {
+                            clientColIndex = 3; // Client name for Ramasses and Incidents
+                        } else if (tableName === 'T_Prospection' || tableName === 'T_Facturation') {
+                            clientColIndex = 1; // Client name for Prospection and Facturation
+                        } else if (tableName === 'T_Planning') {
+                            clientColIndex = 3; // Client name for Planning
+                        } else {
+                            return true; // No client filter for other tables
+                        }
+                        const cellVal = r.values[0][clientColIndex];
+                        return String(cellVal) === clientFilter;
+                    });
+                }
+
+                if (matiereFilter) {
+                    rows = rows.filter(r => {
+                        let matiereColIndex;
+                        if (tableName === 'T_Ramasses') {
+                            matiereColIndex = 2; // Famille matière for Ramasses
+                        } else if (tableName === 'T_Production') {
+                            matiereColIndex = 1; // Produit for Production
+                        } else {
+                            return true; // No matiere filter for other tables
+                        }
+                        const cellVal = r.values[0][matiereColIndex];
+                        return String(cellVal) === matiereFilter;
+                    });
+                }
+
+                if (searchTerm) {
+                    const normSearch = normalizeStr(searchTerm);
+                    rows = rows.filter(r => r.values[0].some(v => normalizeStr(String(v)).includes(normSearch)));
+                }
+
+                renderTable(tableName, rows);
+            }
 
             /**
              * CONFIGURATION
@@ -1327,13 +1433,13 @@
                     idPrefix: 'PL',
                     cols: [
                         { name: 'Index', type: 'number', readonly: true },
-                        { name: 'Date', type: 'date' },
+                        { name: 'Jour', type: 'select', options: ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'] },
                         { name: 'Heure', type: 'text', placeholder: 'HH:MM' },
                         { name: 'N° Client', type: 'select', optionsTable: 'T_Clients', optionLabelIndex: 1, valueIndex: 0 },
-                        { name: 'Matière', type: 'select', optionsTable: 'T_MP', optionLabelIndex: 1 },
+                        { name: 'Matière collectée', type: 'select', optionsTable: 'T_MP', optionLabelIndex: 1 },
+                        { name: 'ordre', type: 'number', default: 1 },
                         { name: 'Equipe', type: 'select', options: ['Equipe 1', 'Equipe 2', 'Equipe 3'] },
-                        { name: 'Statut', type: 'select', options: ['Planifié', 'En cours', 'Réalisé', 'Annulé'] },
-                        { name: 'Commentaires', type: 'textarea' }
+                        { name: 'Date', type: 'date' }
                     ]
                 },
                 'T_Prospection': {
@@ -2282,12 +2388,79 @@
                 document.getElementById("crud-modal").classList.add("hidden");
             }
 
+            async function importFromSmnType() {
+                const dateVal = document.getElementById('filter-planning-date').value;
+                if (!dateVal) {
+                    showToast("Veuillez sélectionner une date dans le filtre.", "error");
+                    return;
+                }
+
+                if (!confirm(`Importer les ramasses de la Semaine Type pour le ${dateVal} ?`)) return;
+
+                const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+                const selectedDate = new Date(dateVal + 'T12:00:00'); // Use T12:00:00 to avoid timezone issues with date parsing
+                const dayName = days[selectedDate.getDay()];
+
+                if (dayName === 'Dimanche' || dayName === 'Samedi') {
+                    showToast("Pas de semaine type définie pour le weekend.", "warning");
+                    return;
+                }
+
+                try {
+                    showLoading();
+                    if (!cachedData['T_SmnType']) await loadTableData('T_SmnType');
+                    const smnRows = cachedData['T_SmnType'] || [];
+                    const toImport = smnRows.filter(r => r.values[0][1] === dayName);
+
+                    if (toImport.length === 0) {
+                        showToast(`Aucune donnée trouvée dans la Semaine Type pour ${dayName}.`, "info");
+                        hideLoading();
+                        return;
+                    }
+
+                    const token = await getToken();
+                    // Excel fractional date for Excel
+                    // Excel date starts from 1900-01-01 as day 1. JS date starts from 1970-01-01.
+                    // 25569 is the number of days between 1900-01-01 and 1970-01-01.
+                    const excelDate = (selectedDate.getTime() / (1000 * 60 * 60 * 24)) + 25569;
+
+                    const rowsToPost = toImport.map(r => {
+                        const v = [...r.values[0]];
+                        // T_Planning columns: Index, Jour, Heure, N° Client, Matière collectée, ordre, Equipe, Date
+                        // T_SmnType columns: Index, Jour, Heure, N° Client, Matière collectée, ordre, Equipe
+                        // We need to add the Date at the end.
+                        // The first column (Index) will be ignored by Excel when inserting new rows, it will auto-increment.
+                        // So we just need to ensure the array length matches the target table's columns.
+                        v.push(excelDate);
+                        return v;
+                    });
+
+                    const res = await fetch(`${resolvedGraphBaseUrl}/tables/T_Planning/rows`, {
+                        method: "POST",
+                        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+                        body: JSON.stringify({ values: rowsToPost })
+                    });
+
+                    if (res.ok) {
+                        showToast(`${toImport.length} interventions importées ! ✅`, "success");
+                        loadTableData('T_Planning');
+                    } else {
+                        const err = await res.json();
+                        throw new Error(err.error?.message || "Erreur lors de l'import");
+                    }
+                } catch (err) {
+                    console.error("Import error:", err);
+                    showToast("Erreur import: " + err.message, "error");
+                } finally {
+                    hideLoading();
+                }
+            }
+
             async function saveEntry() {
                 const { tableName, rowIndex } = currentModalState;
                 const config = TABLE_CONFIG[tableName];
                 const btn = document.getElementById("modal-save-btn");
                 const form = document.getElementById("dynamic-form");
-                const fd = new FormData(form);
 
                 btn.disabled = true;
                 btn.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>`;
