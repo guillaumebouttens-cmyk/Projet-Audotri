@@ -301,8 +301,12 @@
                         class="nav-item !px-2 text-[10px]">⚙️ Paramètres</button>
                 </div>
 
-                <div id="user-info"
-                    class="hidden flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+            </nav>
+
+            <div class="p-4 border-t border-gray-100" id="auth-controls">
+                <button id="login-btn" onclick="signIn()"
+                    class="hidden w-full bg-blue-600 text-white py-2 rounded-xl font-bold text-sm">Connexion</button>
+                <div id="user-info" class="hidden flex items-center justify-between">
                     <div class="overflow-hidden">
                         <p id="username" class="text-xs font-black text-slate-700 truncate"></p>
                         <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Connecté</p>
@@ -315,9 +319,8 @@
                         </svg>
                     </button>
                 </div>
-            </nav>
+            </div>
         </aside>
-
         <!-- Main Content Area -->
         <main class="flex-1 overflow-y-auto bg-gray-50 flex flex-col no-scrollbar">
             <!-- App Content Container -->
