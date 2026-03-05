@@ -1474,12 +1474,6 @@
                 }
             }
 
-            /**
-             * UTILS
-             */
-            function normalizeStr(str) {
-                return String(str).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            }
 
             async function getToken() {
                 const accounts = myMSALObj.getAllAccounts();
