@@ -1887,18 +1887,33 @@
                 // Render Entries
                 rows.forEach((row, idx) => {
                     const vals = row.values[0];
-                    const dayStr = vals[1];
-                    const timeStr = vals[2];
-                    const client = vals[4];
-                    const matière = vals[5];
+                    const dayStr = vals[1];   // Jour
+                    const timeVal = vals[2];  // Heure (can be "HH:MM" or Excel number)
+                    const clientId = vals[3]; // N° Client (ID)
+                    const matière = vals[4];  // Matière collect
 
-                    if (clientFilter && client !== clientFilter) return;
+                    if (clientFilter && clientId !== clientFilter) return;
 
                     const dayIdx = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'].indexOf(dayStr);
                     if (dayIdx === -1) return;
 
-                    const [h, m] = timeStr.split(':').map(Number);
+                    // Robust time parsing
+                    let h, m;
+                    if (typeof timeVal === 'number') {
+                        const totalMinutes = Math.round(timeVal * 1440);
+                        h = Math.floor(totalMinutes / 60);
+                        m = totalMinutes % 60;
+                    } else if (typeof timeVal === 'string' && timeVal.includes(':')) {
+                        [h, m] = timeVal.split(':').map(Number);
+                    } else {
+                        return; // Invalid time format
+                    }
+
                     if (isNaN(h) || h < 8 || h > 16) return;
+
+                    // Client Name Lookup
+                    const clients = cachedData['T_Clients'] || [];
+                    const client = clients.find(c => c.values[0][0] == clientId)?.values[0][1] || `Client #${clientId}`;
 
                     const top = ((h - 8) * 60 + (m || 0)) * (1200 / (8 * 60));
                     const left = (dayIdx * 20) + '%';
@@ -1911,9 +1926,10 @@
                     card.style.width = width;
                     card.style.zIndex = 20;
 
+                    const timeDisplay = `${String(h).padStart(2, '0')}:${String(m || 0).padStart(2, '0')}`;
                     card.innerHTML = `
                     <div onclick="openModal('T_SmnType', ${idx})" class="h-full bg-blue-50 border-l-4 border-blue-500 rounded-lg p-2 shadow-sm group-hover/card:shadow-md transition-all">
-                        <p class="text-[9px] font-black text-blue-600 truncate">${timeStr}</p>
+                        <p class="text-[9px] font-black text-blue-600 truncate">${timeDisplay}</p>
                         <p class="text-[10px] font-bold text-slate-800 leading-tight line-clamp-2">${client}</p>
                         <p class="text-[9px] font-medium text-blue-400 truncate mt-1">${matière}</p>
                     </div>
