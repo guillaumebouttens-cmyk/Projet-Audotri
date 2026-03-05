@@ -995,12 +995,12 @@
                         <!-- Calendar Grid -->
                         <div class="relative h-[650px] overflow-y-auto overflow-x-hidden no-scrollbar">
                             <!-- Time Scale & Background Lines -->
-                            <div id="calendar-grid-body"
+                            <div id="calendar-grid-body-smntype"
                                 class="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr] h-[1200px] relative">
                                 <!-- JS will inject lines and hours -->
                             </div>
                             <!-- Entries Layer -->
-                            <div id="calendar-entries-layer"
+                            <div id="calendar-entries-layer-smntype"
                                 class="absolute top-0 left-[60px] right-0 h-[1200px] pointer-events-none">
                                 <!-- JS will inject entry cards here -->
                             </div>
@@ -1051,13 +1051,49 @@
                             </button>
                         </div>
                     </div>
-                    <div class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-100 table-container">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="sticky-thead border-b border-slate-100">
-                                <tr id="table-head-planning"></tr>
-                            </thead>
-                            <tbody id="table-body-planning" class="divide-y divide-slate-50 text-[11px]"></tbody>
-                        </table>
+                    <div
+                        class="bg-indigo-50/30 rounded-[32px] shadow-sm ring-1 ring-indigo-100 overflow-hidden relative">
+                        <!-- Calendar Header (Days) -->
+                        <div
+                            class="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr] border-b border-indigo-100 bg-indigo-50/60">
+                            <div class="p-4 border-r border-indigo-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-indigo-300" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div
+                                class="p-4 text-center border-r border-indigo-100 font-black text-[10px] uppercase tracking-widest text-indigo-700">
+                                Lundi</div>
+                            <div
+                                class="p-4 text-center border-r border-indigo-100 font-black text-[10px] uppercase tracking-widest text-indigo-700">
+                                Mardi</div>
+                            <div
+                                class="p-4 text-center border-r border-indigo-100 font-black text-[10px] uppercase tracking-widest text-indigo-700">
+                                Mercredi</div>
+                            <div
+                                class="p-4 text-center border-r border-indigo-100 font-black text-[10px] uppercase tracking-widest text-indigo-700">
+                                Jeudi</div>
+                            <div
+                                class="p-4 text-center font-black text-[10px] uppercase tracking-widest text-indigo-700">
+                                Vendredi</div>
+                        </div>
+
+                        <!-- Calendar Grid -->
+                        <div class="relative h-[650px] overflow-y-auto overflow-x-hidden no-scrollbar">
+                            <!-- Time Scale & Background Lines -->
+                            <div id="calendar-grid-body-planning"
+                                class="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr] h-[1200px] relative">
+                                <!-- JS will inject lines and hours -->
+                            </div>
+                            <!-- Entries Layer -->
+                            <div id="calendar-entries-layer-planning"
+                                class="absolute top-0 left-[60px] right-0 h-[1200px] pointer-events-none">
+                                <!-- JS will inject entry cards here -->
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1279,7 +1315,11 @@
                     rows = rows.filter(r => r.values[0].some(v => normalizeStr(String(v)).includes(normSearch)));
                 }
 
-                renderTable(tableName, rows);
+                if (['T_SmnType', 'T_Planning'].includes(tableName)) {
+                    renderCalendar(tableName, rows);
+                } else {
+                    renderTable(tableName, rows);
+                }
             }
 
             /**
@@ -1630,10 +1670,8 @@
                         return row;
                     });
 
-                    if (tableName === 'T_SmnType') {
-                        renderCalendar(cachedData[tableName]);
-                    } else if (tableName === 'T_Planning') {
-                        renderTable('T_Planning', cachedData[tableName]);
+                    if (['T_SmnType', 'T_Planning'].includes(tableName)) {
+                        renderCalendar(tableName, cachedData[tableName]);
                     } else {
                         // Apply current sort if any
                         const state = sortStates[tableName];
@@ -2032,33 +2070,43 @@
             /**
              * CALENDAR LOGIC
              */
-            function renderCalendarGrid() {
-                const gridBody = document.getElementById("calendar-grid-body");
+            function renderCalendarGrid(tableName) {
+                const suffix = normalizeStr(tableName.split('_')[1]);
+                const gridBody = document.getElementById(`calendar-grid-body-${suffix}`);
                 if (!gridBody) return;
                 gridBody.innerHTML = '';
                 gridBody.style.gridTemplateRows = "repeat(8, 1fr)";
 
+                const isPlanning = tableName === 'T_Planning';
+
+                let bgClass = isPlanning ? 'bg-indigo-50/50' : 'bg-slate-50';
+                let borderClass = isPlanning ? 'border-indigo-100' : 'border-slate-200';
+                let borderCellClass = isPlanning ? 'border-indigo-50' : 'border-slate-100';
+                let textClass = isPlanning ? 'text-indigo-400' : 'text-slate-700';
+                let hoverClass = isPlanning ? 'hover:bg-indigo-100/30' : 'hover:bg-blue-50/50';
+
                 for (let h = 8; h < 16; h++) {
                     const hourDiv = document.createElement("div");
-                    hourDiv.className = "flex items-center justify-center border-r border-b border-slate-200 text-[11px] font-black text-slate-700 bg-slate-50";
+                    hourDiv.className = `flex items-center justify-center border-r border-b ${borderClass} text-[11px] font-black ${textClass} ${bgClass}`;
                     hourDiv.innerText = `${h}:00`;
                     gridBody.appendChild(hourDiv);
 
                     for (let d = 0; d < 5; d++) {
                         const slot = document.createElement("div");
-                        slot.className = "border-r border-b border-slate-100 cursor-crosshair hover:bg-blue-50/50 transition-colors relative group/slot";
+                        slot.className = `border-r border-b ${borderCellClass} cursor-crosshair ${hoverClass} transition-colors relative group/slot`;
                         slot.innerHTML = `<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/slot:opacity-100 transition-opacity"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg></div>`;
-                        slot.onclick = () => openModal('T_SmnType', null, { day: d, hour: h });
+                        slot.onclick = () => openModal(tableName, null, { day: d, hour: h });
                         gridBody.appendChild(slot);
                     }
                 }
             }
 
-            function renderCalendar(rows) {
-                renderCalendarGrid(); // Always render grid structure first
+            function renderCalendar(tableName, rows) {
+                renderCalendarGrid(tableName); // Always render grid structure first
 
-                const entriesLayer = document.getElementById("calendar-entries-layer");
-                const clientFilter = document.getElementById("filter-semaine-client")?.value;
+                const suffix = normalizeStr(tableName.split('_')[1]);
+                const entriesLayer = document.getElementById(`calendar-entries-layer-${suffix}`);
+                const clientFilter = document.getElementById(`filter-${suffix}-client`)?.value;
                 if (!entriesLayer) return;
 
                 entriesLayer.innerHTML = '';
@@ -2078,8 +2126,18 @@
 
                     if (clientFilter && clientId !== clientFilter) return;
 
-                    const dayIdx = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'].indexOf(dayStr);
-                    if (dayIdx === -1) return;
+                    let dayIdx = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'].indexOf(dayStr);
+
+                    // For Planning, if date is filtered, the row's Date is already correct, but we still use 'Jour' column to place it.
+                    // Or we place it based on the Date column's day of week.
+                    // Let's use the Date column if it exists to override dayIdx for safety.
+                    if (tableName === 'T_Planning' && vals[7]) {
+                        const d = new Date((vals[7] - 25569) * 86400 * 1000);
+                        // JS getDay(): 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
+                        dayIdx = d.getDay() - 1;
+                    }
+
+                    if (dayIdx < 0 || dayIdx > 4) return;
 
                     // Time parsing
                     let h, m;
@@ -2123,13 +2181,15 @@
                         const equipeColor = equipe?.includes('2') ? 'emerald' : equipe?.includes('3') ? 'amber' : 'blue';
 
                         card.innerHTML = `
-                        <div onclick="openModal('T_SmnType', ${idx})" class="h-full bg-${equipeColor}-50 border-l-4 border-${equipeColor}-500 rounded-lg p-1.5 shadow-sm group-hover/card:shadow-md transition-all overflow-hidden">
-                            <div class="flex items-center justify-between gap-1 mb-0.5">
-                                <span class="text-[8px] font-black text-${equipeColor}-600 uppercase tabular-nums">${timeDisplay}</span>
-                                <span class="text-[7px] font-bold text-slate-400 truncate">${equipe || ''}</span>
+                        <div onclick="openModal('${tableName}', ${idx})" class="h-full bg-${equipeColor}-50 border-l-4 border-${equipeColor}-500 rounded-lg p-1.5 shadow-sm group-hover/card:shadow-md transition-all overflow-hidden flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between gap-1 mb-0.5">
+                                    <span class="text-[8px] font-black text-${equipeColor}-600 uppercase tabular-nums">${timeDisplay}</span>
+                                    <span class="text-[7px] font-bold text-slate-400 truncate">${equipe || ''}</span>
+                                </div>
+                                <p class="text-[9px] font-bold text-slate-800 leading-tight line-clamp-2">${clientName}</p>
                             </div>
-                            <p class="text-[9px] font-bold text-slate-800 leading-tight line-clamp-2">${clientName}</p>
-                            <p class="text-[8px] font-medium text-slate-500 truncate mt-0.5">${matière}</p>
+                            <p class="text-[8px] font-medium text-slate-500 truncate mt-0.5 mix-blend-multiply">${matière}</p>
                         </div>
                     `;
                         entriesLayer.appendChild(card);
