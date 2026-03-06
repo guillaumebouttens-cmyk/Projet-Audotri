@@ -1031,164 +1031,165 @@
                                     <path d="M21 21l-6-6m2-5a7 7-0 11-14 0 7 7-0 0114 0z"></path>
                                 </svg>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <button onclick="loadTableData('T_Planning')"
-                                    class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                                    title="Rafraîchir">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                        </path>
-                                    </svg>
-                                </button>
-                                <button onclick="importFromSmnType()"
-                                    class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 text-xs shrink-0">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12"></path>
-                                    </svg>
-                                    Importer Semaine Type
-                                </button>
-                                <button onclick="openModal('T_Planning')"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-50 transition-all active:scale-95 text-xs shrink-0">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                    </svg>
-                                    Intervention
-                                </button>
-                            </div>
                         </div>
-                        <div
-                            class="bg-indigo-50/30 rounded-[32px] shadow-sm ring-1 ring-indigo-100 overflow-hidden relative">
-                            <!-- Calendar Header (Days) -->
-                            <div
-                                class="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr] border-b border-indigo-100 bg-indigo-50/60">
-                                <div class="p-4 border-r border-indigo-100 flex items-center justify-center">
-                                    <svg class="w-4 h-4 text-indigo-300" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                        </path>
-                                    </svg>
-                                </div>
-                                <div id="header-planning-0"
-                                    class="p-4 text-center border-r border-indigo-100 font-black text-[10px] uppercase tracking-widest text-indigo-700">
-                                    Lundi</div>
-                                <div id="header-planning-1"
-                                    class="p-4 text-center border-r border-indigo-100 font-black text-[10px] uppercase tracking-widest text-indigo-700">
-                                    Mardi</div>
-                                <div id="header-planning-2"
-                                    class="p-4 text-center border-r border-indigo-100 font-black text-[10px] uppercase tracking-widest text-indigo-700">
-                                    Mercredi</div>
-                                <div id="header-planning-3"
-                                    class="p-4 text-center border-r border-indigo-100 font-black text-[10px] uppercase tracking-widest text-indigo-700">
-                                    Jeudi</div>
-                                <div id="header-planning-4"
-                                    class="p-4 text-center font-black text-[10px] uppercase tracking-widest text-indigo-700">
-                                    Vendredi</div>
-                            </div>
-
-                            <!-- Calendar Grid -->
-                            <div class="relative h-[650px] overflow-y-auto overflow-x-hidden no-scrollbar">
-                                <!-- Time Scale & Background Lines -->
-                                <div id="calendar-grid-body-planning"
-                                    class="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr] h-[1200px] relative">
-                                    <!-- JS will inject lines and hours -->
-                                </div>
-                                <!-- Entries Layer -->
-                                <div id="calendar-entries-layer-planning"
-                                    class="absolute top-0 left-[60px] right-0 h-[1200px] pointer-events-none">
-                                    <!-- JS will inject entry cards here -->
-                                </div>
-                            </div>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button onclick="loadTableData('T_Planning')"
+                                class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                                title="Rafraîchir">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                    </path>
+                                </svg>
+                            </button>
+                            <button onclick="importFromSmnType()"
+                                class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 text-xs shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12"></path>
+                                </svg>
+                                Importer Semaine Type
+                            </button>
+                            <button onclick="openModal('T_Planning')"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-50 transition-all active:scale-95 text-xs shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Intervention
+                            </button>
                         </div>
                     </div>
-
-
-                    <!-- TAB: Paramètres -->
-                    <div id="tab-parametres" class="tab-pane hidden space-y-6">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <button onclick="switchSettingsTable('T_MP')" id="btn-setting-mp"
-                                    class="px-4 py-2 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-md shadow-blue-100 transition-all">Familles
-                                    MP</button>
-                                <button onclick="switchSettingsTable('T_ProduitsFinis')" id="btn-setting-produitsfinis"
-                                    class="px-4 py-2 rounded-xl text-sm font-bold bg-white text-slate-400 hover:text-slate-600 transition-all">Produits
-                                    Finis</button>
-                                <button onclick="switchSettingsTable('T_Employés')" id="btn-setting-employes"
-                                    class="px-4 py-2 rounded-xl text-sm font-bold bg-white text-slate-400 hover:text-slate-600 transition-all">Employés</button>
+                    <div
+                        class="bg-indigo-50/30 rounded-[32px] shadow-sm ring-1 ring-indigo-100 overflow-hidden relative">
+                        <!-- Calendar Header (Days) -->
+                        <div
+                            class="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr] border-b border-indigo-100 bg-indigo-50/60">
+                            <div class="p-4 border-r border-indigo-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-indigo-300" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                    </path>
+                                </svg>
                             </div>
+                            <div id="header-planning-0"
+                                class="p-4 text-center border-r border-indigo-100 font-black text-[10px] uppercase tracking-widest text-indigo-700">
+                                Lundi</div>
+                            <div id="header-planning-1"
+                                class="p-4 text-center border-r border-indigo-100 font-black text-[10px] uppercase tracking-widest text-indigo-700">
+                                Mardi</div>
+                            <div id="header-planning-2"
+                                class="p-4 text-center border-r border-indigo-100 font-black text-[10px] uppercase tracking-widest text-indigo-700">
+                                Mercredi</div>
+                            <div id="header-planning-3"
+                                class="p-4 text-center border-r border-indigo-100 font-black text-[10px] uppercase tracking-widest text-indigo-700">
+                                Jeudi</div>
+                            <div id="header-planning-4"
+                                class="p-4 text-center font-black text-[10px] uppercase tracking-widest text-indigo-700">
+                                Vendredi</div>
                         </div>
 
-                        <div id="settings-mp" class="settings-pane space-y-4">
-                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                <h2 class="text-xl font-black text-slate-900">Familles de Matières</h2>
-                                <button onclick="openModal('T_MP')"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                    </svg>
-                                    Ajouter
-                                </button>
+                        <!-- Calendar Grid -->
+                        <div class="relative h-[650px] overflow-y-auto overflow-x-hidden no-scrollbar">
+                            <!-- Time Scale & Background Lines -->
+                            <div id="calendar-grid-body-planning"
+                                class="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr] h-[1200px] relative">
+                                <!-- JS will inject lines and hours -->
                             </div>
-                            <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
-                                <table class="w-full text-left border-collapse">
-                                    <thead class="sticky-thead border-b border-slate-100">
-                                        <tr id="table-head-mp"></tr>
-                                    </thead>
-                                    <tbody id="table-body-mp" class="divide-y divide-slate-50 text-sm"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div id="settings-produitsfinis" class="settings-pane hidden space-y-4">
-                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                <h2 class="text-xl font-black text-slate-900">Produits Finis</h2>
-                                <button onclick="openModal('T_ProduitsFinis')"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                    </svg>
-                                    Ajouter
-                                </button>
-                            </div>
-                            <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
-                                <table class="w-full text-left border-collapse">
-                                    <thead class="sticky-thead border-b border-slate-100">
-                                        <tr id="table-head-produitsfinis"></tr>
-                                    </thead>
-                                    <tbody id="table-body-produitsfinis" class="divide-y divide-slate-50 text-sm">
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div id="settings-employes" class="settings-pane hidden space-y-4">
-                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                <h2 class="text-xl font-black text-slate-900">Employés</h2>
-                                <button onclick="openModal('T_Employés')"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                    </svg>
-                                    Ajouter
-                                </button>
-                            </div>
-                            <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
-                                <table class="w-full text-left border-collapse">
-                                    <thead class="sticky-thead border-b border-slate-100">
-                                        <tr id="table-head-employes"></tr>
-                                    </thead>
-                                    <tbody id="table-body-employes" class="divide-y divide-slate-50 text-sm"></tbody>
-                                </table>
+                            <!-- Entries Layer -->
+                            <div id="calendar-entries-layer-planning"
+                                class="absolute top-0 left-[60px] right-0 h-[1200px] pointer-events-none">
+                                <!-- JS will inject entry cards here -->
                             </div>
                         </div>
                     </div>
                 </div>
+
+
+                <!-- TAB: Paramètres -->
+                <div id="tab-parametres" class="tab-pane hidden space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button onclick="switchSettingsTable('T_MP')" id="btn-setting-mp"
+                                class="px-4 py-2 rounded-xl text-sm font-bold bg-blue-600 text-white shadow-md shadow-blue-100 transition-all">Familles
+                                MP</button>
+                            <button onclick="switchSettingsTable('T_ProduitsFinis')" id="btn-setting-produitsfinis"
+                                class="px-4 py-2 rounded-xl text-sm font-bold bg-white text-slate-400 hover:text-slate-600 transition-all">Produits
+                                Finis</button>
+                            <button onclick="switchSettingsTable('T_Employés')" id="btn-setting-employes"
+                                class="px-4 py-2 rounded-xl text-sm font-bold bg-white text-slate-400 hover:text-slate-600 transition-all">Employés</button>
+                        </div>
+                    </div>
+
+                    <div id="settings-mp" class="settings-pane space-y-4">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <h2 class="text-xl font-black text-slate-900">Familles de Matières</h2>
+                            <button onclick="openModal('T_MP')"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Ajouter
+                            </button>
+                        </div>
+                        <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky-thead border-b border-slate-100">
+                                    <tr id="table-head-mp"></tr>
+                                </thead>
+                                <tbody id="table-body-mp" class="divide-y divide-slate-50 text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="settings-produitsfinis" class="settings-pane hidden space-y-4">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <h2 class="text-xl font-black text-slate-900">Produits Finis</h2>
+                            <button onclick="openModal('T_ProduitsFinis')"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Ajouter
+                            </button>
+                        </div>
+                        <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky-thead border-b border-slate-100">
+                                    <tr id="table-head-produitsfinis"></tr>
+                                </thead>
+                                <tbody id="table-body-produitsfinis" class="divide-y divide-slate-50 text-sm">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="settings-employes" class="settings-pane hidden space-y-4">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <h2 class="text-xl font-black text-slate-900">Employés</h2>
+                            <button onclick="openModal('T_Employés')"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-100 transition-all active:scale-95 text-sm">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Ajouter
+                            </button>
+                        </div>
+                        <div class="bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 table-container">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky-thead border-b border-slate-100">
+                                    <tr id="table-head-employes"></tr>
+                                </thead>
+                                <tbody id="table-body-employes" class="divide-y divide-slate-50 text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
 
         <!-- Toasts Container -->
@@ -1717,16 +1718,9 @@
                         return row;
                     });
 
-                    if (['T_SmnType', 'T_Planning'].includes(tableName)) {
-                        renderCalendar(tableName, cachedData[tableName]);
-                    } else {
-                        // Apply current sort if any
-                        const state = sortStates[tableName];
-                        if (state) {
-                            applySort(tableName, state.colIndex, state.direction);
-                        }
-                        renderTable(tableName, cachedData[tableName]);
-                    }
+                    // Always trigger the filter logic after loading data, so filters apply
+                    // and calendar headers (for Planning) get updated correctly.
+                    runGenericFilter(tableName);
                 } catch (err) {
                     console.error(err);
                     showToast(`Erreur (${tableName}): ` + err.message, "error");
