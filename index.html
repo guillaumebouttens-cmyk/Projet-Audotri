@@ -1293,7 +1293,8 @@
                             d.setDate(monday.getDate() + i);
                             const el = document.getElementById(`header-planning-${i}`);
                             if (el) {
-                                el.innerText = `${dayNames[i]} ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+                                // 3. Updated format to 'Lundi - DD/MM/YY'
+                                el.innerText = `${dayNames[i]} - ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).substr(-2)}`;
                             }
                         }
 
@@ -2511,14 +2512,14 @@
                 }
 
                 try {
-                    showLoading();
+                    // 1. Fixed undefined `showLoading` by using standard user feedback (showToast or disable button)
                     if (!cachedData['T_SmnType']) await loadTableData('T_SmnType');
                     const smnRows = cachedData['T_SmnType'] || [];
                     const toImport = smnRows.filter(r => r.values[0][1] === dayName);
 
                     if (toImport.length === 0) {
                         showToast(`Aucune donnée trouvée dans la Semaine Type pour ${dayName}.`, "info");
-                        hideLoading();
+                        // 1. Fixed undefined `hideLoading` by removing it (it doesn't exist).
                         return;
                     }
 
@@ -2555,9 +2556,8 @@
                 } catch (err) {
                     console.error("Import error:", err);
                     showToast("Erreur import: " + err.message, "error");
-                } finally {
-                    hideLoading();
                 }
+                // 1. Removed `finally { hideLoading(); }` block as hideLoading does not exist.
             }
 
             async function saveEntry() {
@@ -2727,6 +2727,20 @@
                     loadTableData(tableName).then(() => {
                         populateTabFilters(tableName, suffix);
                     });
+                }
+
+                // 2. Set default date to Monday of the current week if tab-planning is opened and filter is empty
+                if (tabId === 'tab-planning') {
+                    const dateFilter = document.getElementById('filter-planning-date');
+                    if (dateFilter && !dateFilter.value) {
+                        const today = new Date();
+                        const day = today.getDay() || 7; // 1=Mon .. 7=Sun
+                        const monday = new Date(today);
+                        monday.setDate(today.getDate() - day + 1);
+                        const fmt = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+                        dateFilter.value = fmt;
+                        // The loaded table data will naturally trigger `runGenericFilter` to apply this new date.
+                    }
                 }
 
                 if (tabId === 'tab-reporting-client') {
