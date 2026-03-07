@@ -1309,7 +1309,12 @@
                         const dMonday = new Date(d);
                         dMonday.setDate(d.getDate() - dDay + 1);
 
-                        return dMonday.toISOString().split('T')[0] === monday.toISOString().split('T')[0];
+                        let included = false;
+                        if (dMonday.toISOString().split('T')[0] === monday.toISOString().split('T')[0]) {
+                            included = true;
+                        }
+                        console.log(`[Planning Filter] Row=${r.values[0][0]}, DateVal=${cellVal}, JSDate=${d.toISOString().split('T')[0]}, Monday=${dMonday.toISOString().split('T')[0]}, TargetMonday=${monday.toISOString().split('T')[0]} -> Included=${included}`);
+                        return included;
                     });
                 }
             } else if (dateFilter) {
@@ -2179,11 +2184,14 @@
                 // Only use it to correct missing dayStr or out of bound values if really needed.
                 if (tableName === 'T_Planning' && vals[7] && (dayIdx < 0 || dayIdx > 4)) {
                     const d = new Date(Math.round((vals[7] - 25569) * 86400) * 1000);
-                    // JS getDay(): 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
-                    dayIdx = d.getDay() - 1;
+                    dayIdx = d.getDay() - 1; // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
+                    console.log(`[renderCalendar] Overriding dayIdx for Row=${vals[0]} based on Date=${d.toISOString().split('T')[0]} -> new DayIdx=${dayIdx}`);
                 }
 
-                if (dayIdx < 0 || dayIdx > 4) return;
+                if (dayIdx < 0 || dayIdx > 4) {
+                    console.log(`[renderCalendar] Rejecting Row=${vals[0]} (DayIdx=${dayIdx} out of bounds)`);
+                    return;
+                }
 
                 // Time parsing
                 let h, m;
@@ -2195,7 +2203,10 @@
                     [h, m] = timeVal.split(':').map(Number);
                 } else { return; }
 
-                if (isNaN(h) || h < 8 || h > 16) return;
+                if (isNaN(h) || h < 8 || h > 16) {
+                    console.log(`[renderCalendar] Rejecting Row=${vals[0]} (Time H=${h} out of bounds 8-16)`);
+                    return;
+                }
 
                 const slotKey = `${dayIdx}-${h}-${m || 0}`;
                 if (!slots[slotKey]) slots[slotKey] = [];
