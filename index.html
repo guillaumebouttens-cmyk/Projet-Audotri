@@ -1303,19 +1303,25 @@
                         const cellVal = r.values[0][7]; // The date column
                         if (!cellVal) return false;
 
-                        // Handle both Excel serial numbers and ISO date strings
-                        let dateStr;
+                        let d;
                         if (typeof cellVal === 'number') {
-                            // Excel serial number conversion
-                            const d = new Date(Math.round((cellVal - 25569) * 86400) * 1000);
-                            dateStr = d.toISOString().split('T')[0];
+                            d = new Date(Math.round((cellVal - 25569) * 86400) * 1000);
                         } else {
-                            // Assume ISO string like '2026-03-10'
-                            dateStr = String(cellVal).split('T')[0];
+                            // Graph API ISO string or similar
+                            d = new Date(String(cellVal).split('T')[0] + 'T12:00:00');
                         }
-                        const target = monday.toISOString().split('T')[0];
-                        const included = dateStr === target;
-                        console.log(`[Planning Filter] Row=${r.values[0][0]}, DateVal=${cellVal}, Parsed=${dateStr}, Target=${target} -> ${included}`);
+
+                        if (isNaN(d.getTime())) return false;
+
+                        const dDay = d.getDay() || 7;
+                        const dMonday = new Date(d);
+                        dMonday.setDate(d.getDate() - dDay + 1);
+
+                        const rowMonday = dMonday.toISOString().split('T')[0];
+                        const targetMonday = monday.toISOString().split('T')[0];
+
+                        const included = rowMonday === targetMonday;
+                        console.log(`[Planning Filter] Row=${r.values[0][0]}, Date=${d.toISOString().split('T')[0]}, RowMon=${rowMonday}, TargetMon=${targetMonday} -> ${included}`);
                         return included;
                     });
                 }
@@ -2185,9 +2191,16 @@
                 // This way a Monday operation will stay on Monday row regardless of Excel serial fractions.
                 // Only use it to correct missing dayStr or out of bound values if really needed.
                 if (tableName === 'T_Planning' && vals[7] && (dayIdx < 0 || dayIdx > 4)) {
-                    const d = new Date(Math.round((vals[7] - 25569) * 86400) * 1000);
-                    dayIdx = d.getDay() - 1; // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
-                    console.log(`[renderCalendar] Overriding dayIdx for Row=${vals[0]} based on Date=${d.toISOString().split('T')[0]} -> new DayIdx=${dayIdx}`);
+                    let d;
+                    if (typeof vals[7] === 'number') {
+                        d = new Date(Math.round((vals[7] - 25569) * 86400) * 1000);
+                    } else {
+                        d = new Date(String(vals[7]).split('T')[0] + 'T12:00:00');
+                    }
+                    if (!isNaN(d.getTime())) {
+                        dayIdx = d.getDay() - 1; // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
+                        console.log(`[renderCalendar] Overriding dayIdx for Row=${vals[0]} based on Date=${d.toISOString().split('T')[0]} -> new DayIdx=${dayIdx}`);
+                    }
                 }
 
                 if (dayIdx < 0 || dayIdx > 4) {
@@ -2839,52 +2852,6 @@
             }
         }
 
-        function runGenericFilter(tableName, query = '') {
-            const suffix = (tableName === 'T_Départs' ? 'departs' : normalizeStr(tableName.split('_')[1]));
-            const dateVal = document.getElementById(`filter-${suffix}-date`)?.value;
-            const clientVal = document.getElementById(`filter-${suffix}-client`)?.value;
-            const matiereVal = document.getElementById(`filter-${suffix}-matiere`) || document.getElementById(`filter-${suffix}-produit`);
-            const matiereSelected = matiereVal?.value;
-
-            const rows = cachedData[tableName] || [];
-            const filtered = rows.filter(r => {
-                const vals = r.values[0];
-                const config = TABLE_CONFIG[tableName];
-
-                // 1. Text Query
-                const matchQuery = !query || vals.some(v => normalizeStr(v).includes(normalizeStr(query)));
-
-                // 2. Date (Local time fix)
-                let matchDate = true;
-                if (dateVal) {
-                    const dateColIdx = config.cols.findIndex(c => c.type === 'date');
-                    if (dateColIdx !== -1) {
-                        const rawDate = vals[dateColIdx];
-                        const d = new Date((rawDate - 25569) * 86400 * 1000);
-                        const rowDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                        matchDate = rowDate === dateVal;
-                    }
-                }
-
-                // 3. Client
-                let matchClient = true;
-                if (clientVal) {
-                    const clientColIdx = config.cols.findIndex(c => c.name === 'Client');
-                    if (clientColIdx !== -1) matchClient = vals[clientColIdx] === clientVal;
-                }
-
-                // 4. Matiere / Produit
-                let matchMatiere = true;
-                if (matiereSelected) {
-                    const matColIdx = config.cols.findIndex(c => c.name === 'Famille matière' || c.name === 'Produit');
-                    if (matColIdx !== -1) matchMatiere = vals[matColIdx] === matiereSelected;
-                }
-
-                return matchQuery && matchDate && matchClient && matchMatiere;
-            });
-
-            renderTable(tableName, filtered);
-        }
 
         function showToast(msg, type) {
             const container = document.getElementById("toast-container");
