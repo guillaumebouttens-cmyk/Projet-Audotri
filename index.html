@@ -2226,9 +2226,10 @@
                     return;
                 }
 
+                const originalIdx = row.__idx;
                 const slotKey = `${dayIdx}-${h}-${m || 0}`;
                 if (!slots[slotKey]) slots[slotKey] = [];
-                slots[slotKey].push({ row, idx, h, m: m || 0, dayIdx, clientId, matière, equipe });
+                slots[slotKey].push({ row, idx: originalIdx, h, m: m || 0, dayIdx, clientId, matière, equipe });
             });
 
             // Display Grouped Slots
@@ -2309,11 +2310,10 @@
                     val = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
                 }
 
-                const isNew = rowIndex === null;
-                const isIndexCol = i === 0 && col.name === 'Index';
+                const isIndexCol = col.name === 'Index' || (i === 0 && col.name.includes('N°'));
 
                 const wrapper = document.createElement("div");
-                wrapper.className = isIndexCol && isNew ? "hidden" : "space-y-1.5";
+                wrapper.className = isIndexCol ? "hidden" : "space-y-1.5";
 
                 const label = `<label class="text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1">${col.name}</label>`;
                 let input = '';
@@ -2618,8 +2618,8 @@
                     if (col.type === 'checkbox') val = form.querySelector(`[name="col_${i}"]`).checked;
                     if (col.type === 'number') val = parseFloat(val) || 0;
 
-                    // Auto-calc for ID on new entries
-                    if (col.name.includes('N°') && rowIndex === null && i === 0) {
+                    // Auto-calc for ID on new entries (N° or Index at first position)
+                    if (rowIndex === null && i === 0 && (col.name.includes('N°') || col.name === 'Index')) {
                         const rows = cachedData[tableName] || [];
                         const ids = rows.map(r => parseInt(r.values[0][0])).filter(id => !isNaN(id));
                         val = ids.length > 0 ? Math.max(...ids) + 1 : 1;
