@@ -2738,8 +2738,8 @@
                 }
 
                 if (tabId === 'tab-semaine') {
-                    renderCalendarGrid();
-                    if (cachedData['T_SmnType']) renderCalendar(cachedData['T_SmnType']);
+                    renderCalendarGrid('T_SmnType');
+                    if (cachedData['T_SmnType']) renderCalendar('T_SmnType', cachedData['T_SmnType']);
                 }
 
                 if (tabId === 'tab-parametres') switchSettingsTable('T_MP');
