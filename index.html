@@ -1303,17 +1303,19 @@
                         const cellVal = r.values[0][7]; // The date column
                         if (!cellVal) return false;
 
-                        // Safe math rounding prevents fractional hours issues
-                        const d = new Date(Math.round((cellVal - 25569) * 86400) * 1000);
-                        const dDay = d.getDay() || 7;
-                        const dMonday = new Date(d);
-                        dMonday.setDate(d.getDate() - dDay + 1);
-
-                        let included = false;
-                        if (dMonday.toISOString().split('T')[0] === monday.toISOString().split('T')[0]) {
-                            included = true;
+                        // Handle both Excel serial numbers and ISO date strings
+                        let dateStr;
+                        if (typeof cellVal === 'number') {
+                            // Excel serial number conversion
+                            const d = new Date(Math.round((cellVal - 25569) * 86400) * 1000);
+                            dateStr = d.toISOString().split('T')[0];
+                        } else {
+                            // Assume ISO string like '2026-03-10'
+                            dateStr = String(cellVal).split('T')[0];
                         }
-                        console.log(`[Planning Filter] Row=${r.values[0][0]}, DateVal=${cellVal}, JSDate=${d.toISOString().split('T')[0]}, Monday=${dMonday.toISOString().split('T')[0]}, TargetMonday=${monday.toISOString().split('T')[0]} -> Included=${included}`);
+                        const target = monday.toISOString().split('T')[0];
+                        const included = dateStr === target;
+                        console.log(`[Planning Filter] Row=${r.values[0][0]}, DateVal=${cellVal}, Parsed=${dateStr}, Target=${target} -> ${included}`);
                         return included;
                     });
                 }
@@ -2271,9 +2273,13 @@
 
             for (let i = 0; i < config.cols.length; i++) {
                 const col = config.cols[i];
+                // Skip 'Jour' column for Planning modal as date field already provides the day
+                if (tableName === 'T_Planning' && col.name === 'Jour') {
+                    continue;
+                }
                 let val = currentModalState.data ? currentModalState.data[i] : (col.default !== undefined ? col.default : '');
 
-                // Prefill from calendar click
+                // Prefill from calendar click (only for SmnType)
                 if (prefill && tableName === 'T_SmnType') {
                     if (col.name === 'Jour') val = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'][prefill.day];
                     if (col.name === 'Heure') val = `${String(prefill.hour).padStart(2, '0')}:00`;
