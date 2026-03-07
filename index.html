@@ -1344,17 +1344,18 @@
 
             if (clientFilter) {
                 rows = rows.filter(r => {
-                    let clientColIndex;
+                    let cellVal;
                     if (tableName === 'T_Ramasses' || tableName === 'T_Incidents') {
-                        clientColIndex = 3; // Client name for Ramasses and Incidents
+                        cellVal = r.values[0][3]; // Client name
                     } else if (tableName === 'T_Prospection' || tableName === 'T_Facturation') {
-                        clientColIndex = 1; // Client name for Prospection and Facturation
-                    } else if (tableName === 'T_Planning') {
-                        clientColIndex = 3; // Client name for Planning
+                        cellVal = r.values[0][1]; // Client name
+                    } else if (tableName === 'T_Planning' || tableName === 'T_SmnType') {
+                        const clientId = r.values[0][3]; // ID
+                        const clients = cachedData['T_Clients'] || [];
+                        cellVal = clients.find(c => c.values[0][0] == clientId)?.values[0][1] || `Client #${clientId}`;
                     } else {
-                        return true; // No client filter for other tables
+                        return true;
                     }
-                    const cellVal = r.values[0][clientColIndex];
                     return String(cellVal) === clientFilter;
                 });
             }
@@ -2181,7 +2182,9 @@
                 const ordre = vals[5];    // Ordre
                 const equipe = vals[6];   // Equipe
 
-                if (clientFilter && clientId !== clientFilter) return;
+                const clients = cachedData['T_Clients'] || [];
+                const clientNameForItem = clients.find(c => c.values[0][0] == clientId)?.values[0][1] || `Client #${clientId}`;
+                if (clientFilter && clientNameForItem !== clientFilter) return;
 
                 let dayIdx = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'].indexOf(dayStr);
 
