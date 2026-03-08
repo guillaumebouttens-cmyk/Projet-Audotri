@@ -456,7 +456,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-[2.5fr_1fr] gap-4 h-[calc(100vh-220px)]">
+                        <div class="grid grid-cols-[3.5fr_1fr] gap-4 h-[calc(100vh-220px)]">
 
                             <!-- LEFT COLUMN: Client Data & Documents -->
                             <div class="detail-card flex flex-col min-h-0">
@@ -467,8 +467,9 @@
                                 </div>
                                 <div class="flex-1 overflow-y-auto pr-2 no-scrollbar space-y-6">
                                     <!-- Compact Data -->
-                                    <div id="detail-data-container" class="grid grid-cols-1 gap-y-3">
-                                        <div class="py-12 text-center text-slate-400 italic">Veuillez patienter...</div>
+                                    <div id="detail-data-container" class="grid grid-cols-2 gap-x-8 gap-y-3">
+                                        <div class="py-12 text-center text-slate-400 italic col-span-2">Veuillez
+                                            patienter...</div>
                                     </div>
 
                                     <!-- Integrated Documents -->
@@ -506,6 +507,21 @@
                                     <div id="detail-prospection-list"
                                         class="flex-1 overflow-y-auto pr-2 no-scrollbar space-y-3">
                                         <div class="py-12 text-center text-slate-400 italic">Aucun historique.</div>
+                                    </div>
+                                </div>
+
+                                <!-- MIDDLE RIGHT: Facturation History -->
+                                <div class="detail-card flex-1 flex flex-col min-h-0">
+                                    <div class="detail-card-header">
+                                        <span class="detail-card-title">Suivi Facturation</span>
+                                        <button onclick="switchTab('tab-facturation')"
+                                            class="text-blue-600 hover:text-blue-700 text-[10px] font-black uppercase tracking-widest">Détails
+                                            →</button>
+                                    </div>
+                                    <div id="detail-facturation-list"
+                                        class="flex-1 overflow-y-auto pr-2 no-scrollbar space-y-2">
+                                        <div class="py-6 text-center text-slate-400 italic text-[11px]">Chargement...
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1242,7 +1258,7 @@
         /**
          * UTILS
          */
-        const normalizeStr = (str) => str ? str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "") : "";
+        const normalizeStr = (str) => String(str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
 
         function toggleNavGroup(groupId) {
             const content = document.getElementById(`group-${groupId}`);
@@ -1918,9 +1934,8 @@
             // 1. Data Sections (Compact & Left Aligned)
             const dataContainer = document.getElementById("detail-data-container");
 
-            // Indices to EXCLUDE: 0 (ID), 1 (Nom), 2 (Groupe)
-            // Indices to include and order
-            const displayIndices = [10, 9, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15];
+            // Indices to exclude: 0 (ID), 1 (Nom), 2 (Groupe) + Ramasse days (11-15)
+            const displayIndices = [10, 9, 3, 4, 5, 6, 7, 8];
 
             dataContainer.innerHTML = displayIndices.map(i => {
                 const col = config.cols[i];
@@ -1945,6 +1960,49 @@
 
             // 4. Load Collectes (With Month Aggregation)
             loadClientCollectesAggregated(currentDetailClientName);
+
+            // 5. Load Facturation
+            loadClientFacturation(currentDetailClientName);
+        }
+
+        async function loadClientFacturation(clientName) {
+            const list = document.getElementById("detail-facturation-list");
+            if (!list) return;
+            if (!cachedData['T_Facturation']) await loadTableData('T_Facturation');
+            const history = (cachedData['T_Facturation'] || []).filter(r => r.values[0][1] === clientName);
+
+            if (history.length === 0) {
+                list.innerHTML = `<div class="py-12 text-center text-slate-400 italic text-[11px]">Aucun historique de facturation.</div>`;
+                return;
+            }
+
+            // Sort by date (reverse chron)
+            const sortedHistory = [...history].sort((a, b) => {
+                const valA = a.values[0][2];
+                const valB = b.values[0][2];
+                return (valB || 0) - (valA || 0);
+            });
+
+            list.innerHTML = sortedHistory.map(r => {
+                const vals = r.values[0];
+                const dateFacture = vals[2] ? new Date((vals[2] - 25569) * 86400 * 1000).toLocaleDateString('fr-FR') : '-';
+                const numFacture = vals[3] || '-';
+                const montant = parseFloat(vals[4]) || 0;
+                const reglee = vals[5] === true || vals[5] === 'VRAI' || vals[5] === 'TRUE';
+
+                return `
+                    <div class="flex items-center justify-between p-2 hover:bg-slate-50 rounded-xl border-b border-slate-50 last:border-0 transition-colors">
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-black text-slate-400 uppercase">${dateFacture}</span>
+                            <span class="text-[11px] font-bold text-slate-700 truncate max-w-[80px]">${numFacture}</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[11px] font-black ${reglee ? 'text-emerald-600' : 'text-rose-600'}">${montant.toFixed(2)} €</div>
+                            <span class="text-[8px] font-black uppercase tracking-tighter">${reglee ? 'RÉGLÉE' : 'À PAYER'}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         async function loadClientCollectesAggregated(clientName) {
