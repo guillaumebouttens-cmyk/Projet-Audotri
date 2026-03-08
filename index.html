@@ -456,9 +456,9 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-[2fr_1fr] gap-4 h-[calc(100vh-220px)]">
+                        <div class="flex flex-col gap-4 h-[calc(100vh-220px)] overflow-y-auto no-scrollbar pr-2">
 
-                            <!-- LEFT COLUMN: Client Data & Documents -->
+                            <!-- CARD: Infos & Documents -->
                             <div class="detail-card flex flex-col min-h-0">
                                 <div class="detail-card-header">
                                     <span class="detail-card-title">Infos & Documents</span>
@@ -492,80 +492,77 @@
                                 </div>
                             </div>
 
-                            <!-- RIGHT COLUMN: Prospection & Collectes -->
-                            <div class="flex flex-col gap-4 min-h-0 overflow-y-auto no-scrollbar pr-1">
-                                <!-- NEW: Estimation Volume & Renta -->
-                                <div class="detail-card flex flex-col min-h-0 bg-blue-50/30 border-blue-100">
-                                    <div class="detail-card-header !mb-2">
-                                        <span class="detail-card-title text-blue-700">Estimation Volume & Renta</span>
+                            <!-- CARD: Estimation Volume & Renta -->
+                            <div class="detail-card flex flex-col shrink-0 bg-blue-50/30 border-blue-100">
+                                <div class="detail-card-header !mb-2">
+                                    <span class="detail-card-title text-blue-700">Estimation Volume & Renta</span>
+                                    <div class="flex items-center gap-3">
+                                        <button onclick="editCurrentClient()"
+                                            class="text-blue-600 hover:text-blue-700 text-[10px] font-black uppercase tracking-widest">Modifier</button>
                                         <span
-                                            class="text-[9px] font-black text-blue-400 uppercase tracking-tighter">Annuel</span>
-                                    </div>
-                                    <div id="detail-renta-container" class="space-y-2">
-                                        <div class="py-4 text-center text-slate-400 italic text-[10px]">Chargement...
-                                        </div>
+                                            class="text-[9px] font-black text-blue-400 uppercase tracking-tighter border-l border-blue-200 pl-3">Annuel</span>
                                     </div>
                                 </div>
-
-                                <!-- TOP RIGHT: Prospection History -->
-                                <div class="detail-card flex-1 flex flex-col min-h-0">
-                                    <div class="detail-card-header">
-                                        <span class="detail-card-title">Suivi Prospection</span>
-                                        <button
-                                            onclick="openModal('T_Prospection', null, { client: currentDetailClientName })"
-                                            class="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase">+
-                                            Nouveau</button>
-                                    </div>
-                                    <div id="detail-prospection-list"
-                                        class="flex-1 overflow-y-auto pr-2 no-scrollbar space-y-3">
-                                        <div class="py-12 text-center text-slate-400 italic">Aucun historique.</div>
-                                    </div>
+                                <div id="detail-renta-container" class="space-y-2">
+                                    <div class="py-4 text-center text-slate-400 italic text-[10px]">Chargement...</div>
                                 </div>
+                            </div>
 
-                                <!-- MIDDLE RIGHT: Facturation History -->
-                                <div class="detail-card flex-1 flex flex-col min-h-0">
-                                    <div class="detail-card-header">
-                                        <span class="detail-card-title">Suivi Facturation</span>
-                                        <button onclick="switchTab('tab-facturation')"
-                                            class="text-blue-600 hover:text-blue-700 text-[10px] font-black uppercase tracking-widest">Détails
-                                            →</button>
-                                    </div>
-                                    <div id="detail-facturation-list"
-                                        class="flex-1 overflow-y-auto pr-2 no-scrollbar space-y-2">
-                                        <div class="py-6 text-center text-slate-400 italic text-[11px]">Chargement...
-                                        </div>
-                                    </div>
+                            <!-- CARD: Prospection History -->
+                            <div class="detail-card flex flex-col shrink-0 min-h-[300px]">
+                                <div class="detail-card-header">
+                                    <span class="detail-card-title">Suivi Prospection</span>
+                                    <button
+                                        onclick="openModal('T_Prospection', null, { client: currentDetailClientName })"
+                                        class="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">+
+                                        Nouveau</button>
                                 </div>
+                                <div id="detail-prospection-list"
+                                    class="max-h-[300px] overflow-y-auto pr-2 no-scrollbar space-y-3">
+                                    <div class="py-12 text-center text-slate-400 italic">Aucun historique.</div>
+                                </div>
+                            </div>
 
-                                <!-- BOTTOM RIGHT: Collections Sum -->
-                                <div class="detail-card flex-1 flex flex-col min-h-0">
-                                    <div class="detail-card-header">
-                                        <span class="detail-card-title">Synthèse Collectes</span>
-                                        <button onclick="switchTab('tab-ramasses')"
-                                            class="text-blue-600 hover:text-blue-700 text-[10px] font-black uppercase tracking-widest">Voir
-                                            détails →</button>
-                                    </div>
-                                    <div class="flex-1 overflow-y-auto pr-2 no-scrollbar">
-                                        <table class="w-full text-left text-[11px]">
-                                            <thead class="sticky top-0 bg-white border-b border-slate-100 z-10">
-                                                <tr>
-                                                    <th
-                                                        class="py-2 font-black text-slate-400 uppercase tracking-tighter">
-                                                        Mois</th>
-                                                    <th
-                                                        class="py-2 font-black text-slate-400 uppercase tracking-tighter">
-                                                        Matière</th>
-                                                    <th
-                                                        class="py-2 font-black text-slate-400 uppercase tracking-tighter text-right">
-                                                        Poids Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="detail-collectes-body"
-                                                class="divide-y divide-slate-50 font-semibold text-slate-600">
-                                                <!-- Stats injected here -->
-                                            </tbody>
-                                        </table>
-                                    </div>
+                            <!-- CARD: Facturation History -->
+                            <div class="detail-card flex flex-col shrink-0 min-h-[300px]">
+                                <div class="detail-card-header">
+                                    <span class="detail-card-title">Suivi Facturation</span>
+                                    <button onclick="switchTab('tab-facturation')"
+                                        class="text-blue-600 hover:text-blue-700 text-[10px] font-black uppercase tracking-widest">Détails
+                                        →</button>
+                                </div>
+                                <div id="detail-facturation-list"
+                                    class="max-h-[300px] overflow-y-auto pr-2 no-scrollbar space-y-2">
+                                    <div class="py-6 text-center text-slate-400 italic text-[11px]">Chargement...</div>
+                                </div>
+                            </div>
+
+                            <!-- CARD: Collections Sum -->
+                            <div class="detail-card flex flex-col shrink-0 min-h-[300px]">
+                                <div class="detail-card-header">
+                                    <span class="detail-card-title">Synthèse Collectes</span>
+                                    <button onclick="switchTab('tab-ramasses')"
+                                        class="text-blue-600 hover:text-blue-700 text-[10px] font-black uppercase tracking-widest">Voir
+                                        détails →</button>
+                                </div>
+                                <div class="flex-1 overflow-y-auto pr-2 no-scrollbar">
+                                    <table class="w-full text-left text-[11px]">
+                                        <thead class="sticky top-0 bg-white border-b border-slate-100 z-10">
+                                            <tr>
+                                                <th class="px-2 py-2 font-black text-slate-400 uppercase">Mois</th>
+                                                <th class="px-2 py-2 font-black text-slate-400 uppercase text-right">
+                                                    Matière</th>
+                                                <th class="px-2 py-2 font-black text-slate-400 uppercase text-right">
+                                                    Poids</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detail-collectes-body">
+                                            <tr>
+                                                <td colspan="3" class="py-8 text-center text-slate-400 italic">
+                                                    Chargement...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
