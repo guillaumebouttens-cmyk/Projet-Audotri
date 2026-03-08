@@ -456,18 +456,18 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-[3.5fr_1fr] gap-4 h-[calc(100vh-220px)]">
+                        <div class="grid grid-cols-[2fr_1fr] gap-4 h-[calc(100vh-220px)]">
 
                             <!-- LEFT COLUMN: Client Data & Documents -->
                             <div class="detail-card flex flex-col min-h-0">
                                 <div class="detail-card-header">
-                                    <span class="detail-card-title">Informations & Fichiers</span>
+                                    <span class="detail-card-title">Infos & Documents</span>
                                     <button onclick="editCurrentClient()"
                                         class="text-blue-600 hover:text-blue-700 text-[10px] font-black uppercase tracking-widest">Modifier</button>
                                 </div>
                                 <div class="flex-1 overflow-y-auto pr-2 no-scrollbar space-y-6">
                                     <!-- Compact Data -->
-                                    <div id="detail-data-container" class="grid grid-cols-2 gap-x-8 gap-y-3">
+                                    <div id="detail-data-container" class="grid grid-cols-2 gap-x-6 gap-y-2">
                                         <div class="py-12 text-center text-slate-400 italic col-span-2">Veuillez
                                             patienter...</div>
                                     </div>
@@ -1448,11 +1448,11 @@
                     { name: 'Adresse mail', type: 'text' },
                     { name: 'Contrat', type: 'checkbox' },
                     { name: 'Client ?', type: 'checkbox' },
-                    { name: 'Ramasse lundi', type: 'checkbox' },
-                    { name: 'Ramasse mardi', type: 'checkbox' },
-                    { name: 'Ramasse mercredi', type: 'checkbox' },
-                    { name: 'Ramasse jeudi', type: 'checkbox' },
-                    { name: 'Ramasse vendredi', type: 'checkbox' }
+                    { name: 'Ramasse ou dépose', type: 'text' },
+                    { name: 'Nombre de passage collecte semaine', type: 'number' },
+                    { name: 'Valorisation de la collecte', type: 'number' },
+                    { name: 'Carton - Prévision annuelle (t)', type: 'number' },
+                    { name: 'Plastique - Prévision annuelle (t)', type: 'number' }
                 ]
             },
             'T_Ramasses': {
@@ -1512,7 +1512,8 @@
                 idPrefix: 'MP',
                 cols: [
                     { name: 'N° Famille matière', type: 'number', readonly: true },
-                    { name: 'Famille', type: 'text' }
+                    { name: 'Famille', type: 'text' },
+                    { name: 'Valorisation (€/t)', type: 'number' }
                 ]
             },
             'T_ProduitsFinis': {
@@ -1934,8 +1935,8 @@
             // 1. Data Sections (Compact & Left Aligned)
             const dataContainer = document.getElementById("detail-data-container");
 
-            // Indices to exclude: 0 (ID), 1 (Nom), 2 (Groupe) + Ramasse days (11-15)
-            const displayIndices = [10, 9, 3, 4, 5, 6, 7, 8];
+            // Indices to exclude: 0 (ID), 1 (Nom), 2 (Groupe)
+            const displayIndices = [10, 9, 11, 12, 13, 14, 15, 3, 4, 5, 6, 7, 8];
 
             dataContainer.innerHTML = displayIndices.map(i => {
                 const col = config.cols[i];
@@ -2102,13 +2103,14 @@
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
-                if (res.status === 404 || !res.ok) {
-                    listContainer.innerHTML = `<div class="py-12 text-center text-slate-400 italic text-xs">Aucun document.</div>`;
+                if (res.status === 404) {
+                    listContainer.innerHTML = `<div class="py-8 text-center text-slate-400 italic text-[10px]">Aucun document (dossier inexistant).</div>`;
                     return;
                 }
+                if (!res.ok) throw new Error("Erreur Graph");
 
                 const data = await res.json();
-                if (data.value.length === 0) {
+                if (!data.value || data.value.length === 0) {
                     listContainer.innerHTML = `<div class="py-12 text-center text-slate-400 italic text-xs">Aucun document.</div>`;
                 } else {
                     listContainer.innerHTML = data.value.map(file => `
@@ -2420,6 +2422,19 @@
                     const select = wrapper.querySelector('select');
                     populateSelect(select, col.optionsTable, col.optionLabelIndex, val);
                 }
+
+                // Auto-calc valuation for T_Clients
+                if (tableName === 'T_Clients' && (col.name.includes('Prévision') || col.name === 'Valorisation de la collecte')) {
+                    const input = wrapper.querySelector('input');
+                    if (input) {
+                        input.addEventListener('input', () => calculateClientValorisation());
+                    }
+                }
+            }
+
+            // Ensure T_MP is loaded for calculation
+            if (tableName === 'T_Clients') {
+                if (!cachedData['T_MP']) await loadTableData('T_MP');
             }
 
             // Document Management Section (Only for existing Contacts)
@@ -2583,6 +2598,24 @@
 
         function closeModal() {
             document.getElementById("crud-modal").classList.add("hidden");
+        }
+
+        function calculateClientValorisation() {
+            const form = document.getElementById("dynamic-form");
+            if (!form) return;
+
+            const cartonQty = parseFloat(form.querySelector('[name="col_14"]').value) || 0;
+            const plastiqueQty = parseFloat(form.querySelector('[name="col_15"]').value) || 0;
+
+            const mpRows = cachedData['T_MP'] || [];
+            const cartonVal = parseFloat(mpRows.find(r => normalizeStr(r.values[0][1]) === 'carton')?.values[0][2]) || 0;
+            const plastiqueVal = parseFloat(mpRows.find(r => normalizeStr(r.values[0][1]) === 'plastique')?.values[0][2]) || 0;
+
+            const total = (cartonQty * cartonVal) + (plastiqueQty * plastiqueVal);
+            const valInput = form.querySelector('[name="col_13"]');
+            if (valInput) {
+                valInput.value = total.toFixed(2);
+            }
         }
 
         async function importFromSmnType() {
