@@ -456,18 +456,18 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-col gap-4 h-[calc(100vh-220px)] overflow-y-auto no-scrollbar pr-2 pb-6">
+                        <div class="h-[calc(100vh-220px)] overflow-y-auto no-scrollbar pr-2 pb-6 space-y-4">
 
-                            <!-- SECTION TOP: Split into two same-sized cards if possible, or just stack -->
-                            <div class="flex flex-col gap-4 shrink-0">
+                            <!-- ROW 1: Infos & Estimation -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <!-- CARD: Infos & Documents -->
-                                <div class="detail-card flex-1 min-h-[400px]">
+                                <div class="detail-card min-h-[400px]">
                                     <div class="detail-card-header">
                                         <span class="detail-card-title">Infos & Documents</span>
                                         <button onclick="editCurrentClient()"
                                             class="text-blue-600 hover:text-blue-700 text-[10px] font-black uppercase tracking-widest">Modifier</button>
                                     </div>
-                                    <div class="flex-1 overflow-y-auto pr-2 no-scrollbar space-y-6">
+                                    <div class="overflow-y-auto pr-2 no-scrollbar space-y-6">
                                         <!-- Compact Data -->
                                         <div id="detail-data-container" class="grid grid-cols-1 gap-y-2">
                                             <div class="py-12 text-center text-slate-400 italic">Veuillez patienter...
@@ -497,7 +497,7 @@
                                 </div>
 
                                 <!-- CARD: Estimation Volume & Renta -->
-                                <div class="detail-card flex-1 min-h-[400px] bg-blue-50/30 border-blue-100 italic">
+                                <div class="detail-card min-h-[400px] bg-blue-50/30 border-blue-100">
                                     <div class="detail-card-header !mb-2">
                                         <span class="detail-card-title text-blue-700">Estimation Volume & Renta</span>
                                         <div class="flex items-center gap-3">
@@ -512,9 +512,12 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
+                            <!-- ROW 2: Prospection & Facturation -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <!-- CARD: Prospection History -->
-                                <div class="detail-card flex flex-col shrink-0 min-h-[300px]">
+                                <div class="detail-card min-h-[300px]">
                                     <div class="detail-card-header">
                                         <span class="detail-card-title">Suivi Prospection</span>
                                         <button
@@ -529,7 +532,7 @@
                                 </div>
 
                                 <!-- CARD: Facturation History -->
-                                <div class="detail-card flex flex-col shrink-0 min-h-[300px]">
+                                <div class="detail-card min-h-[300px]">
                                     <div class="detail-card-header">
                                         <span class="detail-card-title">Suivi Facturation</span>
                                         <button onclick="switchTab('tab-facturation')"
@@ -542,36 +545,35 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- CARD: Collections Sum -->
-                                <div class="detail-card flex flex-col shrink-0 min-h-[300px]">
-                                    <div class="detail-card-header">
-                                        <span class="detail-card-title">Synthèse Collectes</span>
-                                        <button onclick="switchTab('tab-ramasses')"
-                                            class="text-blue-600 hover:text-blue-700 text-[10px] font-black uppercase tracking-widest">Voir
-                                            détails →</button>
-                                    </div>
-                                    <div class="flex-1 overflow-y-auto pr-2 no-scrollbar">
-                                        <table class="w-full text-left text-[11px]">
-                                            <thead class="sticky top-0 bg-white border-b border-slate-100 z-10">
-                                                <tr>
-                                                    <th class="px-2 py-2 font-black text-slate-400 uppercase">Mois</th>
-                                                    <th
-                                                        class="px-2 py-2 font-black text-slate-400 uppercase text-right">
-                                                        Matière</th>
-                                                    <th
-                                                        class="px-2 py-2 font-black text-slate-400 uppercase text-right">
-                                                        Poids</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="detail-collectes-body">
-                                                <tr>
-                                                    <td colspan="3" class="py-8 text-center text-slate-400 italic">
-                                                        Chargement...</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                            <!-- ROW 3: Collections Solo -->
+                            <div class="detail-card w-full min-h-[300px]">
+                                <div class="detail-card-header">
+                                    <span class="detail-card-title">Synthèse Mensuelle des Collectes</span>
+                                    <button onclick="switchTab('tab-ramasses')"
+                                        class="text-blue-600 hover:text-blue-700 text-[10px] font-black uppercase tracking-widest">Toutes
+                                        les ramasses →</button>
+                                </div>
+                                <div class="overflow-x-auto no-scrollbar">
+                                    <table class="w-full text-left text-[11px]">
+                                        <thead class="sticky top-0 bg-white border-b border-slate-100 z-10">
+                                            <tr>
+                                                <th class="px-2 py-2 font-black text-slate-400 uppercase">Mois</th>
+                                                <th class="px-2 py-2 font-black text-slate-400 uppercase">Matière</th>
+                                                <th class="px-2 py-2 font-black text-slate-400 uppercase text-center">
+                                                    Passages</th>
+                                                <th class="px-2 py-2 font-black text-slate-400 uppercase text-right">
+                                                    Poids Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detail-collectes-body">
+                                            <tr>
+                                                <td colspan="4" class="py-8 text-center text-slate-400 italic">
+                                                    Chargement...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -1381,7 +1383,7 @@
                         }
 
                         if (!cellVal) return false;
-                        // Convert Excel serial date to JS Date
+                        // Convert Excel serial date to JS
                         const d = new Date((cellVal - 25569) * 86400 * 1000);
                         const fmt = d.toISOString().split('T')[0];
                         return fmt === dateFilter;
@@ -2049,11 +2051,11 @@
                 const history = (cachedData['T_Ramasses'] || []).filter(r => r.values[0][3] === clientName);
 
                 if (history.length === 0) {
-                    body.innerHTML = `<tr><td colspan="3" class="py-12 text-center text-slate-400 italic">Aucune ramasse enregistrée.</td></tr>`;
+                    body.innerHTML = `<tr><td colspan="4" class="py-12 text-center text-slate-400 italic">Aucune ramasse enregistrée.</td></tr>`;
                     return;
                 }
 
-                // Aggregation map: "Month Year" -> "Matière" -> Total Qty
+                // Aggregation map: "Month Year" -> "Matière" -> { qty: 0, passages: Set() }
                 const aggregation = {};
 
                 history.forEach(r => {
@@ -2064,28 +2066,35 @@
                     const monthYear = date.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
                     const matiere = vals[2] || 'Inconnue';
                     const qty = parseFloat(vals[4]) || 0;
+                    const dateKey = vals[1].toString(); // Using Excel serial as unique day identifier for passages
 
                     if (!aggregation[monthYear]) aggregation[monthYear] = {};
-                    if (!aggregation[monthYear][matiere]) aggregation[monthYear][matiere] = 0;
-                    aggregation[monthYear][matiere] += qty;
+                    if (!aggregation[monthYear][matiere]) aggregation[monthYear][matiere] = { qty: 0, passages: new Set() };
+
+                    aggregation[monthYear][matiere].qty += qty;
+                    aggregation[monthYear][matiere].passages.add(dateKey);
                 });
 
                 // Flatten and sort for display
                 const rows = [];
                 Object.entries(aggregation).forEach(([my, matieres]) => {
-                    Object.entries(matieres).forEach(([mat, qty]) => {
-                        rows.push({ monthYear: my, matiere: mat, qty: qty });
+                    Object.entries(matieres).forEach(([mat, data]) => {
+                        rows.push({ monthYear: my, matiere: mat, qty: data.qty, passages: data.passages.size });
                     });
                 });
 
-                // Sort by month (reverse chron) - this is tricky with string keys, but history was mostly chronological
-                // For simplicity, we just reverse the flattened rows if they are based on chronological ingestion
-                rows.reverse();
+                // Sort by month (reverse chron)
+                rows.sort((a, b) => {
+                    const dateA = new Date(`1 ${a.monthYear}`);
+                    const dateB = new Date(`1 ${b.monthYear}`);
+                    return dateB.getTime() - dateA.getTime();
+                });
 
                 body.innerHTML = rows.map(r => `
                 <tr class="hover:bg-slate-50/50 transition-colors">
                     <td class="py-2 capitalize text-slate-400 font-bold">${r.monthYear}</td>
                     <td class="py-2 text-slate-700">${r.matiere}</td>
+                    <td class="py-2 text-slate-500 text-center font-bold">${r.passages}</td>
                     <td class="py-2 text-blue-600 text-right font-black">${Math.round(r.qty)} kg</td>
                 </tr>
             `).join('');
@@ -2093,6 +2102,7 @@
 
             async function loadClientProspection(clientName) {
                 const list = document.getElementById("detail-prospection-list");
+                if (!list) return;
                 if (!cachedData['T_Prospection']) await loadTableData('T_Prospection');
                 const history = (cachedData['T_Prospection'] || []).filter(r => r.values[0][1] === clientName);
 
@@ -2465,7 +2475,7 @@
                     }
 
                     // Auto-calc valuation for T_Clients
-                    if (tableName === 'T_Clients' && (col.name.includes('Prévision') || col.name.includes('ramasse') || col.name === 'Rentabilité annuelle estimée')) {
+                    if (tableName === 'T_Clients' && (col.name.includes('Prévision') || col.name.includes('ramasse') || col.name === 'Rentabilité annuelle estimée' || col.name === 'KM à parcourir')) {
                         const input = wrapper.querySelector('input');
                         if (input) {
                             input.addEventListener('input', () => calculateClientValorisation());
@@ -2647,7 +2657,8 @@
 
                 // Extract fields
                 const nbRamassesSemaine = parseFloat(form.querySelector('[name="col_12"]').value) || 0;
-                const valRamasseUnitaire = parseFloat(form.querySelector('[name="col_14"]').value) || 0; // Index shifted because of KM
+                const kmParcourir = parseFloat(form.querySelector('[name="col_13"]').value) || 0;
+                const valRamasseUnitaire = parseFloat(form.querySelector('[name="col_14"]').value) || 0;
                 const cartonQtyAn = parseFloat(form.querySelector('[name="col_15"]').value) || 0;
                 const plastiqueQtyAn = parseFloat(form.querySelector('[name="col_16"]').value) || 0;
 
@@ -2656,10 +2667,14 @@
                 const cartonPrice = parseFloat(mpRows.find(r => normalizeStr(r.values[0][1]) === 'carton')?.values[0][2]) || 0;
                 const plastiquePrice = parseFloat(mpRows.find(r => normalizeStr(r.values[0][1]) === 'plastique')?.values[0][2]) || 0;
 
-                // Formula: Qté prévu x prix de vente MP + Nb ramasse x Valorisation d'une ramasse - Nb de ramasse x 30€
+                // Formulas: 
+                // 1. Revenue Matieres: Qty * Price
+                // 2. Revenue Service: Nb passage * ValUnitaire
+                // 3. Cost Service: (KM * 2 / 50) * 25 (Assuming 50km/h speed) -> Equals KM * 1€ basically
                 const revMatiereAn = (cartonQtyAn * cartonPrice) + (plastiqueQtyAn * plastiquePrice);
                 const revServiceAn = nbRamassesSemaine * 52 * valRamasseUnitaire;
-                const coutServiceAn = nbRamassesSemaine * 52 * 30;
+                const costPerPickup = (kmParcourir * 2 / 50) * 25;
+                const coutServiceAn = nbRamassesSemaine * 52 * costPerPickup;
 
                 const totalAn = revMatiereAn + revServiceAn - coutServiceAn;
 
