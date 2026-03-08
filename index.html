@@ -467,9 +467,8 @@
                                 </div>
                                 <div class="flex-1 overflow-y-auto pr-2 no-scrollbar space-y-6">
                                     <!-- Compact Data -->
-                                    <div id="detail-data-container" class="grid grid-cols-2 gap-x-6 gap-y-2">
-                                        <div class="py-12 text-center text-slate-400 italic col-span-2">Veuillez
-                                            patienter...</div>
+                                    <div id="detail-data-container" class="grid grid-cols-1 gap-y-2">
+                                        <div class="py-12 text-center text-slate-400 italic">Veuillez patienter...</div>
                                     </div>
 
                                     <!-- Integrated Documents -->
@@ -494,7 +493,20 @@
                             </div>
 
                             <!-- RIGHT COLUMN: Prospection & Collectes -->
-                            <div class="flex flex-col gap-6 min-h-0">
+                            <div class="flex flex-col gap-4 min-h-0 overflow-y-auto no-scrollbar pr-1">
+                                <!-- NEW: Estimation Volume & Renta -->
+                                <div class="detail-card flex flex-col min-h-0 bg-blue-50/30 border-blue-100">
+                                    <div class="detail-card-header !mb-2">
+                                        <span class="detail-card-title text-blue-700">Estimation Volume & Renta</span>
+                                        <span
+                                            class="text-[9px] font-black text-blue-400 uppercase tracking-tighter">Annuel</span>
+                                    </div>
+                                    <div id="detail-renta-container" class="space-y-2">
+                                        <div class="py-4 text-center text-slate-400 italic text-[10px]">Chargement...
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- TOP RIGHT: Prospection History -->
                                 <div class="detail-card flex-1 flex flex-col min-h-0">
                                     <div class="detail-card-header">
@@ -1449,10 +1461,11 @@
                     { name: 'Contrat', type: 'checkbox' },
                     { name: 'Client ?', type: 'checkbox' },
                     { name: 'Ramasse ou dépose', type: 'text' },
-                    { name: 'Nombre de passage collecte semaine', type: 'number' },
-                    { name: 'Valorisation de la collecte', type: 'number' },
+                    { name: 'Nb ramasses semaine', type: 'number' },
+                    { name: 'Valorisation d\'une ramasse', type: 'number' },
                     { name: 'Carton - Prévision annuelle (t)', type: 'number' },
-                    { name: 'Plastique - Prévision annuelle (t)', type: 'number' }
+                    { name: 'Plastique - Prévision annuelle (t)', type: 'number' },
+                    { name: 'Rentabilité annuelle estimée', type: 'number', readonly: true }
                 ]
             },
             'T_Ramasses': {
@@ -1932,38 +1945,40 @@
             const vals = clientRow.values[0];
             const config = TABLE_CONFIG['T_Clients'];
 
-            // 1. Data Sections (Compact & Left Aligned)
+            // 1. Basic Info (Left)
             const dataContainer = document.getElementById("detail-data-container");
+            const basicIndices = [10, 9, 3, 4, 5, 6, 7, 8];
+            dataContainer.innerHTML = basicIndices.map(i => renderDetailField(config, vals, i)).join('');
 
-            // Indices to exclude: 0 (ID), 1 (Nom), 2 (Groupe)
-            const displayIndices = [10, 9, 11, 12, 13, 14, 15, 3, 4, 5, 6, 7, 8];
+            // 2. Estimation & Renta (Right Card)
+            const rentaContainer = document.getElementById("detail-renta-container");
+            const rentaIndices = [11, 12, 13, 14, 15, 16];
+            rentaContainer.innerHTML = rentaIndices.map(i => renderDetailField(config, vals, i)).join('');
 
-            dataContainer.innerHTML = displayIndices.map(i => {
-                const col = config.cols[i];
-                let val = vals[i] || '-';
-                if (col.type === 'checkbox') {
-                    const isChecked = val === true || val === 'VRAI' || val === 'TRUE';
-                    val = isChecked ? '<span class="text-emerald-600">OUI</span>' : '<span class="text-slate-300">NON</span>';
-                }
-                return `
-                    <div class="flex items-center justify-between border-b border-slate-50 pb-1">
-                        <span class="data-label text-[9px]">${col.name}</span>
-                        <span class="data-value text-[11px]">${val}</span>
-                    </div>
-                `;
-            }).join('');
-
-            // 2. Load Prospection
+            // 3. Keep other loads
             loadClientProspection(currentDetailClientName);
-
-            // 3. Load Documents (Integrated)
             loadContactDocumentsDetail(currentDetailClientName);
-
-            // 4. Load Collectes (With Month Aggregation)
             loadClientCollectesAggregated(currentDetailClientName);
-
-            // 5. Load Facturation
             loadClientFacturation(currentDetailClientName);
+        }
+
+
+        function renderDetailField(config, vals, i) {
+            const col = config.cols[i];
+            let val = vals[i] || '-';
+            if (col.type === 'checkbox') {
+                const isChecked = val === true || val === 'VRAI' || val === 'TRUE';
+                val = isChecked ? '<span class="text-emerald-600 font-bold">OUI</span>' : '<span class="text-slate-300">NON</span>';
+            } else if (col.name.includes('Rentabilité') || col.name.includes('Valorisation')) {
+                const num = parseFloat(val) || 0;
+                val = `<span class="${num >= 0 ? 'text-blue-600' : 'text-rose-600'} font-black">${num.toFixed(2)} €</span>`;
+            }
+            return `
+                <div class="flex items-center justify-between border-b border-slate-50 pb-1">
+                    <span class="data-label text-[9px]">${col.name}</span>
+                    <span class="data-value text-[11px]">${val}</span>
+                </div>
+            `;
         }
 
         async function loadClientFacturation(clientName) {
@@ -2424,7 +2439,7 @@
                 }
 
                 // Auto-calc valuation for T_Clients
-                if (tableName === 'T_Clients' && (col.name.includes('Prévision') || col.name === 'Valorisation de la collecte')) {
+                if (tableName === 'T_Clients' && (col.name.includes('Prévision') || col.name.includes('ramasse') || col.name === 'Rentabilité annuelle estimée')) {
                     const input = wrapper.querySelector('input');
                     if (input) {
                         input.addEventListener('input', () => calculateClientValorisation());
@@ -2604,17 +2619,28 @@
             const form = document.getElementById("dynamic-form");
             if (!form) return;
 
-            const cartonQty = parseFloat(form.querySelector('[name="col_14"]').value) || 0;
-            const plastiqueQty = parseFloat(form.querySelector('[name="col_15"]').value) || 0;
+            // Extract fields
+            const nbRamassesSemaine = parseFloat(form.querySelector('[name="col_12"]').value) || 0;
+            const valRamasseUnitaire = parseFloat(form.querySelector('[name="col_13"]').value) || 0;
+            const cartonQtyAn = parseFloat(form.querySelector('[name="col_14"]').value) || 0;
+            const plastiqueQtyAn = parseFloat(form.querySelector('[name="col_15"]').value) || 0;
 
+            // Get material prices from parameters
             const mpRows = cachedData['T_MP'] || [];
-            const cartonVal = parseFloat(mpRows.find(r => normalizeStr(r.values[0][1]) === 'carton')?.values[0][2]) || 0;
-            const plastiqueVal = parseFloat(mpRows.find(r => normalizeStr(r.values[0][1]) === 'plastique')?.values[0][2]) || 0;
+            const cartonPrice = parseFloat(mpRows.find(r => normalizeStr(r.values[0][1]) === 'carton')?.values[0][2]) || 0;
+            const plastiquePrice = parseFloat(mpRows.find(r => normalizeStr(r.values[0][1]) === 'plastique')?.values[0][2]) || 0;
 
-            const total = (cartonQty * cartonVal) + (plastiqueQty * plastiqueVal);
-            const valInput = form.querySelector('[name="col_13"]');
-            if (valInput) {
-                valInput.value = total.toFixed(2);
+            // Formula: Qté prévu x prix de vente MP + Nb ramasse x Valorisation d'une ramasse - Nb de ramasse x 30€
+            // Weekly base for pickups * 52 for annual
+            const revMatiereAn = (cartonQtyAn * cartonPrice) + (plastiqueQtyAn * plastiquePrice);
+            const revServiceAn = nbRamassesSemaine * 52 * valRamasseUnitaire;
+            const coutServiceAn = nbRamassesSemaine * 52 * 30;
+
+            const totalAn = revMatiereAn + revServiceAn - coutServiceAn;
+
+            const rentaInput = form.querySelector('[name="col_16"]');
+            if (rentaInput) {
+                rentaInput.value = totalAn.toFixed(2);
             }
         }
 
