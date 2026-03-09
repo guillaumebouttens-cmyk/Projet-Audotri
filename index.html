@@ -1857,9 +1857,6 @@
                     if (container) {
                         const style = window.getComputedStyle(container);
                         console.log(`[DEBUG] Container CSS for ${suffix}: display=${style.display}, visibility=${style.visibility}, opacity=${style.opacity}, height=${style.height}, hiddenClass=${container.classList.contains('hidden')}`);
-                        // Force unhide just in case
-                        container.classList.remove('hidden');
-                        container.style.display = 'block';
                     }
 
                     const displayRows = [...rows].reverse().slice(0, 50);
@@ -1903,15 +1900,6 @@
                     });
                     console.log(`[DEBUG] Rendered ${body.children.length} rows for ${tableName}. HTML length: ${body.innerHTML.length}. Content: ${body.innerHTML.substring(0, 100)}...`);
 
-                    // Force reflow/visibility for the whole section
-                    const group = body.closest('.table-container');
-                    if (group) {
-                        group.style.display = 'block';
-                        group.style.visibility = 'visible';
-                        group.style.opacity = '1';
-                        group.style.height = 'auto';
-                        group.parentElement.style.display = 'block';
-                    }
                 } catch (err) {
                     console.error(`[CRITICAL] renderTable failed for ${tableName}:`, err);
                 }
