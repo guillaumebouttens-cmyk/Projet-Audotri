@@ -1650,12 +1650,14 @@
                 document.getElementById("user-info").classList.remove("hidden");
                 document.getElementById("login-btn").classList.add("hidden");
                 document.getElementById("app-content").classList.remove("hidden");
+                document.getElementById("loading-overlay").classList.add("hidden"); // Force hide immediately
 
                 await resolveSiteAndWorkbook();
                 setReportingDefaultFilters();
                 // Sequence initial data loads to avoid concurrent Graph hits
                 await loadTableData('T_Clients');
                 await loadTableData('T_MP');
+                await loadTableData('T_Production'); // Load Production early
                 loadDashboard();
             }
 
@@ -1729,9 +1731,9 @@
              */
             async function loadDashboard() {
                 if (!resolvedGraphBaseUrl) return;
-                // Switch to default tab if none active or if starting
+                // Default to Production if starting, otherwise keep active
                 const activeTab = document.querySelector('.tab-pane:not(.hidden)');
-                let suffix = 'reporting-client';
+                let suffix = 'production';
                 if (activeTab) {
                     suffix = activeTab.id.replace('tab-', '');
                 }
@@ -2920,6 +2922,10 @@
                     console.error("Tab not found:", tabId);
                     return;
                 }
+
+                // Emergency Visibility Check: Ensure layout is shown
+                document.getElementById("loading-overlay").classList.add("hidden");
+                document.getElementById("app-content").classList.remove("hidden");
 
                 document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
                 targetTab.classList.remove('hidden');
