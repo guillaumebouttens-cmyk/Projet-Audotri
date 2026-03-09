@@ -665,7 +665,7 @@
 
 
                     <!-- TAB: Reporting Client -->
-                    <div id="tab-reporting-client" class="tab-pane space-y-4 print:space-y-6">
+                    <div id="tab-reporting-client" class="tab-pane hidden space-y-4 print:space-y-6">
                         <div
                             class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-1 print:hidden">
                             <div class="flex flex-wrap items-center gap-4 w-full md:w-auto">
@@ -1646,25 +1646,47 @@
             }
 
             async function handleUserAccount(account) {
-                const usernameEl = document.getElementById("username");
-                const userInfoEl = document.getElementById("user-info");
-                const loginBtnEl = document.getElementById("login-btn");
-                const appContentEl = document.getElementById("app-content");
-                const overlayEl = document.getElementById("loading-overlay");
+                try {
+                    const usernameEl = document.getElementById("username");
+                    const userInfoEl = document.getElementById("user-info");
+                    const loadingOverlay = document.getElementById("loading-overlay");
+                    const appContent = document.getElementById("app-content");
 
-                if (usernameEl) usernameEl.innerText = account.username;
-                if (userInfoEl) userInfoEl.classList.remove("hidden");
-                if (loginBtnEl) loginBtnEl.classList.add("hidden");
-                if (appContentEl) appContentEl.classList.remove("hidden");
-                if (overlayEl) overlayEl.classList.add("hidden");
+                    if (usernameEl) usernameEl.innerText = account.username;
+                    if (userInfoEl) userInfoEl.classList.remove("hidden");
+                    if (document.getElementById("login-btn")) document.getElementById("login-btn").classList.add("hidden");
 
-                await resolveSiteAndWorkbook();
-                setReportingDefaultFilters();
-                // Sequence initial data loads to avoid concurrent Graph hits
-                await loadTableData('T_Clients');
-                await loadTableData('T_MP');
-                await loadTableData('T_Production'); // Load Production early
-                loadDashboard();
+                    await resolveSiteAndWorkbook();
+                    setReportingDefaultFilters();
+
+                    // Sequence initial data loads
+                    // We catch individual errors to allow partial loading if one table fails
+                    const safeLoad = async (name) => {
+                        try {
+                            await loadTableData(name);
+                        } catch (e) {
+                            console.error(`[INIT] Optional table ${name} failed:`, e);
+                        }
+                    };
+
+                    await safeLoad('T_Clients');
+                    await safeLoad('T_MP');
+                    await safeLoad('T_Production');
+
+                    // FORCE SHOW APP even if some data fails
+                    if (loadingOverlay) loadingOverlay.classList.add("hidden");
+                    if (appContent) appContent.classList.remove("hidden");
+
+                    loadDashboard();
+                } catch (err) {
+                    console.error("[CRITICAL] handleUserAccount failed:", err);
+                    showToast("Erreur de chargement. Veuillez rafraîchir.", "error");
+                    // Emergency UI show
+                    const overlay = document.getElementById("loading-overlay");
+                    const content = document.getElementById("app-content");
+                    if (overlay) overlay.classList.add("hidden");
+                    if (content) content.classList.remove("hidden");
+                }
             }
 
             function setReportingDefaultFilters() {
