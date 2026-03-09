@@ -7,6 +7,8 @@
     <title>Audotri - Application SharePoint</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <!-- MSAL.js via CDN -->
     <script src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
     <style>
@@ -1629,6 +1631,13 @@
 
 
             /**
+             * GLOBAL STATE & SEMAPHORE
+             */
+            let isTableLoading = {};
+            const MAX_RETRIES = 3;
+            const INITIAL_RETRY_DELAY = 1000; // 1s
+
+            /**
              * AUTH & SSO SILENT
              */
             async function initAuth() {
@@ -1684,6 +1693,9 @@
 
                 await resolveSiteAndWorkbook();
                 setReportingDefaultFilters();
+                // Sequence initial data loads to avoid concurrent Graph hits
+                await loadTableData('T_Clients');
+                await loadTableData('T_MP');
                 loadDashboard();
             }
 
@@ -1767,32 +1779,64 @@
                 switchTab('tab-' + suffix);
             }
 
-            async function loadTableData(tableName) {
+            async function loadTableData(tableName, force = false) {
                 if (!resolvedGraphBaseUrl) return;
-                try {
-                    const token = await getToken();
-                    const res = await fetch(`${resolvedGraphBaseUrl}/tables/${tableName}/rows`, {
-                        headers: { "Authorization": `Bearer ${token}` }
-                    });
-                    if (!res.ok) {
-                        const errBody = await res.json().catch(() => ({}));
-                        console.error(`Erreur chargement ${tableName}:`, errBody);
-                        throw new Error(`Erreur ${res.status}: ${errBody.error?.message || 'Inconnue'}`);
-                    }
-                    const data = await res.json();
-                    // Store with absolute index to fix search/edit bug
-                    cachedData[tableName] = data.value.map((row, idx) => {
-                        row.__idx = idx;
-                        return row;
-                    });
 
-                    // Always trigger the filter logic after loading data, so filters apply
-                    // and calendar headers (for Planning) get updated correctly.
-                    runGenericFilter(tableName);
-                } catch (err) {
-                    console.error(err);
-                    showToast(`Erreur (${tableName}): ` + err.message, "error");
+                // 1. Skip if already loading
+                if (isTableLoading[tableName]) {
+                    console.log(`[Cache] Loading for ${tableName} already in progress, skipping.`);
+                    return;
                 }
+
+                // 2. Skip if cached and not forced
+                if (!force && cachedData[tableName] && cachedData[tableName].length > 0) {
+                    console.log(`[Cache] Using cached data for ${tableName}`);
+                    runGenericFilter(tableName);
+                    return;
+                }
+
+                isTableLoading[tableName] = true;
+                let retryCount = 0;
+
+                const executeFetch = async () => {
+                    try {
+                        const token = await getToken();
+                        const res = await fetch(`${resolvedGraphBaseUrl}/tables/${tableName}/rows`, {
+                            headers: { "Authorization": `Bearer ${token}` }
+                        });
+
+                        if (!res.ok) {
+                            if (res.status === 504 && retryCount < MAX_RETRIES) {
+                                retryCount++;
+                                const delay = INITIAL_RETRY_DELAY * Math.pow(2, retryCount - 1);
+                                console.warn(`[Retry] 504 Error on ${tableName}. Retrying in ${delay}ms... (Attempt ${retryCount}/${MAX_RETRIES})`);
+                                await new Promise(resolve => setTimeout(resolve, delay));
+                                return await executeFetch();
+                            }
+
+                            const errBody = await res.json().catch(() => ({}));
+                            console.error(`Erreur chargement ${tableName}:`, errBody);
+                            throw new Error(`Erreur ${res.status}: ${errBody.error?.message || 'Inconnue'}`);
+                        }
+
+                        const data = await res.json();
+                        cachedData[tableName] = data.value.map((row, idx) => {
+                            row.__idx = idx;
+                            return row;
+                        });
+
+                        console.log(`[Success] Data loaded for ${tableName}`);
+                        runGenericFilter(tableName);
+
+                    } catch (err) {
+                        console.error(`[Error] ${tableName}:`, err);
+                        showToast(`Erreur (${tableName}): ` + err.message, "error");
+                    } finally {
+                        delete isTableLoading[tableName];
+                    }
+                };
+
+                await executeFetch();
             }
 
             function renderTable(tableName, rows) {
@@ -2921,6 +2965,9 @@
                     loadTableData(tableName).then(() => {
                         populateTabFilters(tableName, suffix);
                     });
+                } else if (suffix === 'ramasses') {
+                    // Specific case fallback if TABLE_CONFIG is missing key
+                    loadTableData('T_Ramasses').then(() => populateTabFilters('T_Ramasses', 'ramasses'));
                 }
 
                 // 2. Set default date to Monday of the current week if tab-planning is opened and filter is empty
