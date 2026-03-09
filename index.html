@@ -1646,11 +1646,17 @@
             }
 
             async function handleUserAccount(account) {
-                document.getElementById("username").innerText = account.username;
-                document.getElementById("user-info").classList.remove("hidden");
-                document.getElementById("login-btn").classList.add("hidden");
-                document.getElementById("app-content").classList.remove("hidden");
-                document.getElementById("loading-overlay").classList.add("hidden"); // Force hide immediately
+                const usernameEl = document.getElementById("username");
+                const userInfoEl = document.getElementById("user-info");
+                const loginBtnEl = document.getElementById("login-btn");
+                const appContentEl = document.getElementById("app-content");
+                const overlayEl = document.getElementById("loading-overlay");
+
+                if (usernameEl) usernameEl.innerText = account.username;
+                if (userInfoEl) userInfoEl.classList.remove("hidden");
+                if (loginBtnEl) loginBtnEl.classList.add("hidden");
+                if (appContentEl) appContentEl.classList.remove("hidden");
+                if (overlayEl) overlayEl.classList.add("hidden");
 
                 await resolveSiteAndWorkbook();
                 setReportingDefaultFilters();
@@ -2924,8 +2930,10 @@
                 }
 
                 // Emergency Visibility Check: Ensure layout is shown
-                document.getElementById("loading-overlay").classList.add("hidden");
-                document.getElementById("app-content").classList.remove("hidden");
+                const overlay = document.getElementById("loading-overlay");
+                const appContent = document.getElementById("app-content");
+                if (overlay) overlay.classList.add("hidden");
+                if (appContent) appContent.classList.remove("hidden");
 
                 document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
                 targetTab.classList.remove('hidden');
@@ -2989,7 +2997,8 @@
             function switchSettingsTable(tableName) {
                 document.querySelectorAll('.settings-pane').forEach(p => p.classList.add('hidden'));
                 const suffix = normalizeStr(tableName.split('_')[1]);
-                document.getElementById(`settings-${suffix}`).classList.remove('hidden');
+                const pane = document.getElementById(`settings-${suffix}`);
+                if (pane) pane.classList.remove('hidden');
 
                 document.querySelectorAll('button[id^="btn-setting-"]').forEach(b => {
                     b.classList.remove('bg-blue-600', 'text-white', 'shadow-md', 'shadow-blue-100');
