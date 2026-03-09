@@ -1314,126 +1314,83 @@
             }
 
             function runGenericFilter(tableName, searchTerm = '') {
-                if (!cachedData[tableName]) return;
-                const suffix = normalizeStr(tableName.split('_')[1]);
-                const dateFilter = document.getElementById(`filter-${suffix}-date`)?.value;
-                const clientFilter = document.getElementById(`filter-${suffix}-client`)?.value;
-                const matiereFilter = document.getElementById(`filter-${suffix}-matiere`)?.value; // Added for ramasses/production
-
-                let rows = cachedData[tableName];
-
-                if (tableName === 'T_Planning') {
-                    let monday;
-                    if (dateFilter) {
-                        const selectedDate = new Date(dateFilter + 'T12:00:00'); // T12 to avoid timezone shifts
-                        const day = selectedDate.getDay() || 7; // 1=Mon .. 7=Sun
-                        monday = new Date(selectedDate);
-                        monday.setDate(selectedDate.getDate() - day + 1);
-                    } else {
-                        // Reset headers to default if no date filter
-                        const dayNames = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
-                        for (let i = 0; i < 5; i++) {
-                            const el = document.getElementById(`header-planning-${i}`);
-                            if (el) el.innerText = dayNames[i];
-                        }
+                try {
+                    console.log(`[DEBUG] runGenericFilter called for ${tableName} (searchTerm: "${searchTerm}")`);
+                    if (!cachedData[tableName]) {
+                        console.warn(`[DEBUG] No cached data for ${tableName}`);
+                        return;
                     }
+                    const suffix = normalizeStr(tableName.split('_')[1]);
+                    const dateFilter = document.getElementById(`filter-${suffix}-date`)?.value;
+                    const clientFilter = document.getElementById(`filter-${suffix}-client`)?.value;
+                    const matiereFilter = document.getElementById(`filter-${suffix}-matiere`)?.value;
 
-                    if (monday) {
-                        // Update headers with specific dates
-                        const dayNames = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
-                        for (let i = 0; i < 5; i++) {
-                            const d = new Date(monday);
-                            d.setDate(monday.getDate() + i);
-                            const el = document.getElementById(`header-planning-${i}`);
-                            if (el) {
-                                // 3. Updated format to 'Lundi - DD/MM/YY'
-                                el.innerText = `${dayNames[i]} - ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).substr(-2)}`;
-                            }
+                    console.log(`[DEBUG] Filters for ${suffix}: date=${dateFilter}, client=${clientFilter}, matiere=${matiereFilter}`);
+
+                    let rows = cachedData[tableName];
+
+                    if (tableName === 'T_Planning') {
+                        let monday;
+                        if (dateFilter) {
+                            const selectedDate = new Date(dateFilter + 'T12:00:00');
+                            const day = selectedDate.getDay() || 7;
+                            monday = new Date(selectedDate);
+                            monday.setDate(selectedDate.getDate() - day + 1);
                         }
-
-                        // Filter rows to only show those in the selected week (Mon-Fri)
-                        rows = rows.filter(r => {
-                            const cellVal = r.values[0][7]; // The date column
-                            if (!cellVal) return false;
-
-                            let d;
-                            if (typeof cellVal === 'number') {
-                                d = new Date(Math.round((cellVal - 25569) * 86400) * 1000);
-                            } else {
-                                d = new Date(String(cellVal).split('T')[0] + 'T12:00:00');
-                            }
-
-                            if (isNaN(d.getTime())) return false;
-
-                            const dDay = d.getDay() || 7;
-                            const dMonday = new Date(d);
-                            dMonday.setDate(d.getDate() - dDay + 1);
-
-                            const rowMonday = dMonday.toISOString().split('T')[0];
+                        if (monday) {
                             const targetMonday = monday.toISOString().split('T')[0];
-
-                            return rowMonday === targetMonday;
+                            rows = rows.filter(r => {
+                                const cellVal = r.values[0][7];
+                                if (!cellVal) return false;
+                                let d = (typeof cellVal === 'number') ? new Date(Math.round((cellVal - 25569) * 86400) * 1000) : new Date(String(cellVal).split('T')[0] + 'T12:00:00');
+                                const dDay = d.getDay() || 7;
+                                const dMonday = new Date(d);
+                                dMonday.setDate(d.getDate() - dDay + 1);
+                                return dMonday.toISOString().split('T')[0] === targetMonday;
+                            });
+                        }
+                    } else if (dateFilter && (tableName === 'T_Ramasses' || tableName === 'T_Production' || tableName === 'T_Départs' || tableName === 'T_Incidents')) {
+                        const dateIdx = tableName === 'T_Production' ? 3 : 1;
+                        rows = rows.filter(r => {
+                            try {
+                                const cellVal = r.values[0][dateIdx];
+                                if (!cellVal) return false;
+                                const d = (typeof cellVal === 'number') ? new Date((cellVal - 25569) * 86400 * 1000) : new Date(cellVal);
+                                return d.toISOString().split('T')[0] === dateFilter;
+                            } catch (e) { return false; }
                         });
                     }
-                } else if (dateFilter) {
-                    rows = rows.filter(r => {
-                        let cellVal;
-                        if (tableName === 'T_Ramasses' || tableName === 'T_Production' || tableName === 'T_Départs' || tableName === 'T_Incidents') {
-                            cellVal = r.values[0][1]; // Date is at index 1 for Ramasses, Production, Départs, Incidents
-                        } else {
-                            return true; // No date filter for other tables
-                        }
 
-                        if (!cellVal) return false;
-                        // Convert Excel serial date to JS
-                        const d = new Date((cellVal - 25569) * 86400 * 1000);
-                        const fmt = d.toISOString().split('T')[0];
-                        return fmt === dateFilter;
-                    });
-                }
+                    if (clientFilter) {
+                        rows = rows.filter(r => {
+                            try {
+                                let cellVal;
+                                if (tableName === 'T_Ramasses' || tableName === 'T_Incidents') cellVal = r.values[0][3];
+                                else if (tableName === 'T_Prospection' || tableName === 'T_Facturation') cellVal = r.values[0][1];
+                                else if (tableName === 'T_Planning' || tableName === 'T_SmnType') {
+                                    const clientId = r.values[0][3];
+                                    cellVal = (cachedData['T_Clients'] || []).find(c => c.values[0][0] == clientId)?.values[0][1] || `Client #${clientId}`;
+                                } else return true;
+                                return String(cellVal) === clientFilter;
+                            } catch (e) { return false; }
+                        });
+                    }
 
-                if (clientFilter) {
-                    rows = rows.filter(r => {
-                        let cellVal;
-                        if (tableName === 'T_Ramasses' || tableName === 'T_Incidents') {
-                            cellVal = r.values[0][3]; // Client name
-                        } else if (tableName === 'T_Prospection' || tableName === 'T_Facturation') {
-                            cellVal = r.values[0][1]; // Client name
-                        } else if (tableName === 'T_Planning' || tableName === 'T_SmnType') {
-                            const clientId = r.values[0][3]; // ID
-                            const clients = cachedData['T_Clients'] || [];
-                            cellVal = clients.find(c => c.values[0][0] == clientId)?.values[0][1] || `Client #${clientId}`;
-                        } else {
-                            return true;
-                        }
-                        return String(cellVal) === clientFilter;
-                    });
-                }
+                    if (matiereFilter && (tableName === 'T_Ramasses' || tableName === 'T_Production')) {
+                        const idx = tableName === 'T_Ramasses' ? 2 : 1;
+                        rows = rows.filter(r => String(r.values[0][idx]) === matiereFilter);
+                    }
 
-                if (matiereFilter) {
-                    rows = rows.filter(r => {
-                        let matiereColIndex;
-                        if (tableName === 'T_Ramasses') {
-                            matiereColIndex = 2; // Famille matière for Ramasses
-                        } else if (tableName === 'T_Production') {
-                            matiereColIndex = 1; // Produit for Production
-                        } else {
-                            return true; // No matiere filter for other tables
-                        }
-                        const cellVal = r.values[0][matiereColIndex];
-                        return String(cellVal) === matiereFilter;
-                    });
-                }
+                    if (searchTerm) {
+                        const normSearch = normalizeStr(searchTerm);
+                        rows = rows.filter(r => r.values[0].some(v => normalizeStr(String(v)).includes(normSearch)));
+                    }
 
-                if (searchTerm) {
-                    const normSearch = normalizeStr(searchTerm);
-                    rows = rows.filter(r => r.values[0].some(v => normalizeStr(String(v)).includes(normSearch)));
-                }
-
-                if (['T_SmnType', 'T_Planning'].includes(tableName)) {
-                    renderCalendar(tableName, rows);
-                } else {
-                    renderTable(tableName, rows);
+                    console.log(`[DEBUG] Final rows to render for ${tableName}: ${rows.length}`);
+                    if (['T_SmnType', 'T_Planning'].includes(tableName)) renderCalendar(tableName, rows);
+                    else renderTable(tableName, rows);
+                } catch (err) {
+                    console.error(`[CRITICAL] runGenericFilter failed for ${tableName}:`, err);
                 }
             }
 
@@ -1843,81 +1800,94 @@
             }
 
             function renderTable(tableName, rows) {
-                const config = TABLE_CONFIG[tableName];
-                const suffix = (tableName === 'T_Départs' ? 'departs' : normalizeStr(tableName.split('_')[1]));
-                const head = document.getElementById(`table-head-${suffix}`);
-                const body = document.getElementById(`table-body-${suffix}`);
+                try {
+                    const config = TABLE_CONFIG[tableName];
+                    const suffix = normalizeStr(tableName.split('_')[1]);
+                    const head = document.getElementById(`table-head-${suffix}`);
+                    const body = document.getElementById(`table-body-${suffix}`);
 
-                console.log(`[UI] Rendering table ${tableName} (Suffix: ${suffix})`);
-                if (!head || !body) {
-                    console.error(`[UI] Elements not found for suffix ${suffix}: head=${!!head}, body=${!!body}`);
-                    return;
-                }
+                    console.log(`[UI] Rendering table ${tableName} (Suffix: ${suffix}, Rows: ${rows?.length || 0})`);
+                    if (!head || !body) {
+                        console.error(`[UI] Elements not found for suffix ${suffix}: head=${!!head}, body=${!!body}`);
+                        return;
+                    }
 
-                // Header
-                const sortState = sortStates[tableName] || {};
-                head.innerHTML = config.cols.map((c, i) => {
-                    if (c.hidden) return null;
-                    const isSorted = sortState.colIndex === i;
-                    const dir = sortState.direction;
-                    const icon = !isSorted ? `<svg class="w-3 h-3 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 10l5-5 5 5M7 14l5 5 5-5"></path></svg>` :
-                        dir === 'asc' ? `<svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7"></path></svg>` :
-                            `<svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>`;
+                    if (!config) {
+                        console.error(`[UI] No config found for table: ${tableName}`);
+                        return;
+                    }
 
-                    return `
-                    <th onclick="sortTable('${tableName}', ${i})" class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors group">
-                        <div class="flex items-center gap-2">
-                            ${c.name}
-                            ${icon}
-                        </div>
-                    </th>
-                `;
-                }).filter(h => h !== null).join('') + '<th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter text-right sticky right-0 bg-slate-50/90 backdrop-blur shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">Actions</th>';
+                    // Header
+                    const sortState = sortStates[tableName] || {};
+                    head.innerHTML = config.cols.map((c, i) => {
+                        if (c.hidden) return null;
+                        const isSorted = sortState.colIndex === i;
+                        const dir = sortState.direction;
+                        const icon = !isSorted ? `<svg class="w-3 h-3 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 10l5-5 5 5M7 14l5 5 5-5"></path></svg>` :
+                            dir === 'asc' ? `<svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 15l7-7 7 7"></path></svg>` :
+                                `<svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>`;
 
-                // Body
-                body.innerHTML = '';
-                if (!rows || rows.length === 0) {
-                    const visibleColsCount = config.cols.filter(c => !c.hidden).length;
-                    body.innerHTML = `<tr><td colspan="${visibleColsCount + 1}" class="px-6 py-12 text-center text-slate-400 italic">Aucune donnée trouvée</td></tr>`;
-                    return;
-                }
+                        return `
+                        <th onclick="sortTable('${tableName}', ${i})" class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors group">
+                            <div class="flex items-center gap-2">
+                                ${c.name}
+                                ${icon}
+                            </div>
+                        </th>
+                    `;
+                    }).filter(h => h !== null).join('') + '<th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-tighter text-right sticky right-0 bg-slate-50/90 backdrop-blur shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">Actions</th>';
 
-                // We only render filtered or limited rows, but they are already cached.
-                const displayRows = [...rows].reverse().slice(0, 50);
+                    // Body
+                    body.innerHTML = '';
+                    if (!rows || rows.length === 0) {
+                        const visibleColsCount = config.cols.filter(c => !c.hidden).length;
+                        body.innerHTML = `<tr><td colspan="${visibleColsCount + 1}" class="px-6 py-12 text-center text-slate-400 italic">Aucune donnée trouvée</td></tr>`;
+                        return;
+                    }
 
-                displayRows.forEach((row) => {
-                    const originalIdx = row.__idx;
-                    const vals = row.values[0];
-                    const tr = document.createElement("tr");
-                    tr.className = "hover:bg-slate-50/50 transition-colors group";
+                    const displayRows = [...rows].reverse().slice(0, 50);
+                    displayRows.forEach((row, rowIdx) => {
+                        try {
+                            const originalIdx = row.__idx;
+                            const vals = row.values[0];
+                            const tr = document.createElement("tr");
+                            tr.className = "hover:bg-slate-50/50 transition-colors group";
 
-                    let cellsContent = config.cols.map((col, cIdx) => {
-                        if (col.hidden) return null;
-                        let val = vals[cIdx] || '';
-                        if (col.type === 'checkbox') {
-                            const isChecked = val === true || val === 'VRAI' || val === 'TRUE';
-                            return `<td class="px-6 py-4"><span class="w-5 h-5 rounded-md flex items-center justify-center ${isChecked ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-300'}">
-                            ${isChecked ? '<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg>' : ''}
-                        </span></td>`;
+                            let cellsContent = config.cols.map((col, cIdx) => {
+                                if (col.hidden) return null;
+                                let val = vals[cIdx] || '';
+                                if (col.type === 'checkbox') {
+                                    const isChecked = val === true || val === 'VRAI' || val === 'TRUE';
+                                    return `<td class="px-6 py-4"><span class="w-5 h-5 rounded-md flex items-center justify-center ${isChecked ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-300'}">
+                                ${isChecked ? '<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path></svg>' : ''}
+                            </span></td>`;
+                                }
+                                if (col.type === 'date' && val) {
+                                    try {
+                                        const date = new Date((val - 25569) * 86400 * 1000); // Excel date to JS
+                                        val = isNaN(date.getTime()) ? val : date.toLocaleDateString('fr-FR');
+                                    } catch (e) { }
+                                }
+                                return `<td class="px-6 py-4 font-medium text-slate-700 whitespace-nowrap">${val}</td>`;
+                            }).filter(c => c !== null).join('');
+
+                            tr.innerHTML = cellsContent + `
+                        <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap sticky right-0 bg-white/90 backdrop-blur group-hover:bg-slate-50/95 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">
+                            ${tableName === 'T_Clients' ? `<button onclick="viewClient(${originalIdx})" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Détails"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>` : ''}
+                            <button onclick="openModal('${tableName}', ${originalIdx})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                            <button onclick="deleteEntry('${tableName}', ${originalIdx})" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                        </td>
+                    `;
+                            body.appendChild(tr);
+                        } catch (rowErr) {
+                            console.error(`[ERROR] Failed to render row ${rowIdx} for ${tableName}:`, rowErr);
                         }
-                        if (col.type === 'date' && val) {
-                            try {
-                                const date = new Date((val - 25569) * 86400 * 1000); // Excel date to JS
-                                val = isNaN(date.getTime()) ? val : date.toLocaleDateString('fr-FR');
-                            } catch (e) { }
-                        }
-                        return `<td class="px-6 py-4 font-medium text-slate-700 whitespace-nowrap">${val}</td>`;
-                    }).filter(c => c !== null).join('');
+                    });
+                    console.log(`[DEBUG] Rendered ${displayRows.length} rows for ${tableName}`);
 
-                    tr.innerHTML = cellsContent + `
-                    <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap sticky right-0 bg-white/90 backdrop-blur group-hover:bg-slate-50/95 shadow-[-10px_0_15px_-3px_rgba(0,0,0,0.05)]">
-                        ${tableName === 'T_Clients' ? `<button onclick="viewClient(${originalIdx})" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Détails"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></button>` : ''}
-                        <button onclick="openModal('${tableName}', ${originalIdx})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                        <button onclick="deleteEntry('${tableName}', ${originalIdx})" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                    </td>
-                `;
-                    body.appendChild(tr);
-                });
+                } catch (err) {
+                    console.error(`[CRITICAL] renderTable failed for ${tableName}:`, err);
+                }
             }
 
             function sortTable(tableName, colIndex) {
@@ -2315,118 +2285,115 @@
             }
 
             function renderCalendar(tableName, rows) {
-                const suffix = normalizeStr(tableName.split('_')[1]);
-                console.log(`[UI] Rendering calendar ${tableName} (Suffix: ${suffix})`);
-                renderCalendarGrid(tableName); // Always render grid structure first
+                try {
+                    const suffix = normalizeStr(tableName.split('_')[1]);
+                    console.log(`[UI] Rendering calendar ${tableName} (Suffix: ${suffix}, Rows: ${rows?.length || 0})`);
+                    renderCalendarGrid(tableName); // Always render grid structure first
 
-                const entriesLayer = document.getElementById(`calendar-entries-layer-${suffix}`);
-                const clientFilter = document.getElementById(`filter-${suffix}-client`)?.value;
-                if (!entriesLayer) return;
-
-                entriesLayer.innerHTML = '';
-                if (!rows) return;
-
-                // Render Entries
-                const slots = {}; // Group by Day-Hour-Minute
-
-                rows.forEach((row, idx) => {
-                    const vals = row.values[0];
-                    const dayStr = vals[1];   // Jour
-                    const timeVal = vals[2];  // Heure
-                    const clientId = vals[3]; // N° Client (ID)
-                    const matière = vals[4];  // Matière collectée
-                    const ordre = vals[5];    // Ordre
-                    const equipe = vals[6];   // Equipe
-
-                    const clients = cachedData['T_Clients'] || [];
-                    const clientNameForItem = clients.find(c => c.values[0][0] == clientId)?.values[0][1] || `Client #${clientId}`;
-                    if (clientFilter && clientNameForItem !== clientFilter) return;
-
-                    let dayIdx = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'].indexOf(dayStr);
-
-                    // For Planning, if date is filtered, the row's Date is correctly extracted.
-                    // Instead of failing the calendar if date day-of-week doesn't match string,
-                    // we stick to the text 'Jour' to render it gracefully.
-                    // This way a Monday operation will stay on Monday row regardless of Excel serial fractions.
-                    // Only use it to correct missing dayStr or out of bound values if really needed.
-                    if (tableName === 'T_Planning' && vals[7] && (dayIdx < 0 || dayIdx > 4)) {
-                        let d;
-                        if (typeof vals[7] === 'number') {
-                            d = new Date(Math.round((vals[7] - 25569) * 86400) * 1000);
-                        } else {
-                            d = new Date(String(vals[7]).split('T')[0] + 'T12:00:00');
-                        }
-                        if (!isNaN(d.getTime())) {
-                            dayIdx = d.getDay() - 1; // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
-                        }
-                    }
-
-                    if (dayIdx < 0 || dayIdx > 4) {
+                    const entriesLayer = document.getElementById(`calendar-entries-layer-${suffix}`);
+                    const clientFilter = document.getElementById(`filter-${suffix}-client`)?.value;
+                    if (!entriesLayer) {
+                        console.error(`[UI] entriesLayer not found for suffix ${suffix}`);
                         return;
                     }
 
-                    // Time parsing
-                    let h, m;
-                    if (typeof timeVal === 'number') {
-                        const totalMinutes = Math.round(timeVal * 1440);
-                        h = Math.floor(totalMinutes / 60);
-                        m = totalMinutes % 60;
-                    } else if (typeof timeVal === 'string' && timeVal.includes(':')) {
-                        [h, m] = timeVal.split(':').map(Number);
-                    } else {
-                        // Support rows with missing/invalid time (like Row 13) by defaulting to 08:00
-                        h = 8; m = 0;
-                    }
-
-                    if (isNaN(h) || h < 8 || h > 16) {
+                    entriesLayer.innerHTML = '';
+                    if (!rows || rows.length === 0) {
+                        console.log(`[DEBUG] No rows in calendar for ${tableName}`);
                         return;
                     }
 
-                    const originalIdx = row.__idx;
-                    const slotKey = `${dayIdx}-${h}-${m || 0}`;
-                    if (!slots[slotKey]) slots[slotKey] = [];
-                    slots[slotKey].push({ row, idx: originalIdx, h, m: m || 0, dayIdx, clientId, matière, equipe });
-                });
+                    // Render Entries
+                    const slots = {}; // Group by Day-Hour-Minute
 
-                // Display Grouped Slots
-                Object.values(slots).forEach(slotEntries => {
-                    const count = slotEntries.length;
-                    const cardWidthPercent = 20 / count;
+                    rows.forEach((row, rowIdx) => {
+                        try {
+                            const vals = row.values[0];
+                            const dayStr = vals[1];   // Jour
+                            const timeVal = vals[2];  // Heure
+                            const clientId = vals[3]; // N° Client (ID)
+                            const matière = vals[4];  // Matière collectée
+                            const equipe = vals[6];   // Equipe
 
-                    slotEntries.forEach((entry, i) => {
-                        const { idx, h, m, dayIdx, clientId, matière, equipe } = entry;
-                        const clients = cachedData['T_Clients'] || [];
-                        const clientName = clients.find(c => c.values[0][0] == clientId)?.values[0][1] || `Client #${clientId}`;
+                            const clients = cachedData['T_Clients'] || [];
+                            const clientNameForItem = clients.find(c => c.values[0][0] == clientId)?.values[0][1] || `Client #${clientId}`;
+                            if (clientFilter && clientNameForItem !== clientFilter) return;
 
-                        const top = ((h - 8) * 60 + m) * (1200 / (8 * 60));
-                        const left = (dayIdx * 20) + (i * cardWidthPercent) + '%';
-                        const width = cardWidthPercent + '%';
+                            let dayIdx = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'].indexOf(dayStr);
 
-                        const card = document.createElement("div");
-                        card.className = "absolute p-0.5 pointer-events-auto cursor-pointer group/card";
-                        card.style.top = `${top}px`;
-                        card.style.left = left;
-                        card.style.width = width;
-                        card.style.zIndex = 20;
+                            if (tableName === 'T_Planning' && vals[7] && (dayIdx < 0 || dayIdx > 4)) {
+                                let d = (typeof vals[7] === 'number') ? new Date(Math.round((vals[7] - 25569) * 86400) * 1000) : new Date(String(vals[7]).split('T')[0] + 'T12:00:00');
+                                if (!isNaN(d.getTime())) dayIdx = d.getDay() - 1;
+                            }
 
-                        const timeDisplay = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-                        const equipeColor = equipe?.includes('2') ? 'emerald' : equipe?.includes('3') ? 'amber' : 'blue';
+                            if (dayIdx < 0 || dayIdx > 4) return;
 
-                        card.innerHTML = `
-                        <div onclick="openModal('${tableName}', ${idx})" class="h-full bg-${equipeColor}-50 border-l-4 border-${equipeColor}-500 rounded-lg p-1.5 shadow-sm group-hover/card:shadow-md transition-all overflow-hidden flex flex-col justify-between">
-                            <div>
-                                <div class="flex items-center justify-between gap-1 mb-0.5">
-                                    <span class="text-[8px] font-black text-${equipeColor}-600 uppercase tabular-nums">${timeDisplay}</span>
-                                    <span class="text-[7px] font-bold text-slate-400 truncate">${equipe || ''}</span>
-                                </div>
-                                <p class="text-[9px] font-bold text-slate-800 leading-tight line-clamp-2">${clientName}</p>
-                            </div>
-                            <p class="text-[8px] font-medium text-slate-500 truncate mt-0.5 mix-blend-multiply">${matière}</p>
-                        </div>
-                    `;
-                        entriesLayer.appendChild(card);
+                            // Time parsing
+                            let h, m;
+                            if (typeof timeVal === 'number') {
+                                const totalMinutes = Math.round(timeVal * 1440);
+                                h = Math.floor(totalMinutes / 60);
+                                m = totalMinutes % 60;
+                            } else if (typeof timeVal === 'string' && timeVal.includes(':')) {
+                                [h, m] = timeVal.split(':').map(Number);
+                            } else {
+                                h = 8; m = 0;
+                            }
+
+                            if (isNaN(h) || h < 8 || h > 16) return;
+
+                            const originalIdx = row.__idx;
+                            const slotKey = `${dayIdx}-${h}-${m || 0}`;
+                            if (!slots[slotKey]) slots[slotKey] = [];
+                            slots[slotKey].push({ row, idx: originalIdx, h, m: m || 0, dayIdx, clientId, matière, equipe });
+                        } catch (rowErr) {
+                            console.error(`[ERROR] Calendar row ${rowIdx} for ${tableName} failed:`, rowErr);
+                        }
                     });
-                });
+
+                    // Display Grouped Slots
+                    Object.values(slots).forEach(slotEntries => {
+                        const count = slotEntries.length;
+                        const cardWidthPercent = 20 / count;
+
+                        slotEntries.forEach((entry, i) => {
+                            const { idx, h, m, dayIdx, clientId, matière, equipe } = entry;
+                            const clients = cachedData['T_Clients'] || [];
+                            const clientName = clients.find(c => c.values[0][0] == clientId)?.values[0][1] || `Client #${clientId}`;
+
+                            const top = ((h - 8) * 60 + m) * (1200 / (8 * 60));
+                            const left = (dayIdx * 20) + (i * cardWidthPercent) + '%';
+                            const width = cardWidthPercent + '%';
+
+                            const card = document.createElement("div");
+                            card.className = "absolute p-0.5 pointer-events-auto cursor-pointer group/card";
+                            card.style.top = `${top}px`;
+                            card.style.left = left;
+                            card.style.width = width;
+                            card.style.zIndex = 20;
+
+                            const timeDisplay = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                            const equipeColor = equipe?.includes('2') ? 'emerald' : equipe?.includes('3') ? 'amber' : 'blue';
+
+                            card.innerHTML = `
+                            <div onclick="openModal('${tableName}', ${idx})" class="h-full bg-${equipeColor}-50 border-l-4 border-${equipeColor}-500 rounded-lg p-1.5 shadow-sm group-hover/card:shadow-md transition-all overflow-hidden flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between gap-1 mb-0.5">
+                                        <span class="text-[8px] font-black text-${equipeColor}-600 uppercase tabular-nums">${timeDisplay}</span>
+                                        <span class="text-[7px] font-bold text-slate-400 truncate">${equipe || ''}</span>
+                                    </div>
+                                    <p class="text-[9px] font-bold text-slate-800 leading-tight line-clamp-2">${clientName}</p>
+                                </div>
+                                <p class="text-[8px] font-medium text-slate-500 truncate mt-0.5 mix-blend-multiply">${matière}</p>
+                            </div>
+                        `;
+                            entriesLayer.appendChild(card);
+                        });
+                    });
+                    console.log(`[DEBUG] Calendar rendered for ${tableName}`);
+                } catch (err) {
+                    console.error(`[CRITICAL] renderCalendar failed for ${tableName}:`, err);
+                }
             }
 
 
