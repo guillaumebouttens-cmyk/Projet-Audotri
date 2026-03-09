@@ -1845,11 +1845,16 @@
                         return;
                     }
 
+                    const container = body.closest('.tab-pane');
+                    const isVisible = container ? !container.classList.contains('hidden') : true;
+                    console.log(`[DEBUG] Container visibility for ${suffix}: ${isVisible}`);
+
                     const displayRows = [...rows].reverse().slice(0, 50);
                     displayRows.forEach((row, rowIdx) => {
                         try {
                             const originalIdx = row.__idx;
                             const vals = row.values[0];
+                            if (rowIdx === 0) console.log(`[DEBUG] Row 0 values for ${tableName}:`, vals);
                             const tr = document.createElement("tr");
                             tr.className = "hover:bg-slate-50/50 transition-colors group";
 
@@ -2945,6 +2950,7 @@
                     if (suffix === 'prospection') return normK.includes('prospection');
                     if (suffix === 'departs') return normK.includes('depart');
                     if (suffix === 'planning') return normK.includes('planning');
+                    if (suffix === 'semaine') return normK === 'tsmntype';
                     if (suffix === 'reporting-client') return false;
                     return normK.includes(suffix.replace(/-/g, ''));
                 });
