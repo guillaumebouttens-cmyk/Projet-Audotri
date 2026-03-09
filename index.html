@@ -1633,7 +1633,10 @@
             /**
              * GLOBAL STATE & SEMAPHORE
              */
-            let isTableLoading = {};
+            /**
+             * GLOBAL STATE & SEMAPHORE
+             */
+            let isTableLoading = {}; // Stores promises instead of booleans
             const MAX_RETRIES = 3;
             const INITIAL_RETRY_DELAY = 1000; // 1s
 
@@ -1782,25 +1785,24 @@
             async function loadTableData(tableName, force = false) {
                 if (!resolvedGraphBaseUrl) return;
 
-                // 1. Skip if already loading
+                // 1. If already loading, return existing promise
                 if (isTableLoading[tableName]) {
-                    console.log(`[Cache] Loading for ${tableName} already in progress, skipping.`);
-                    return;
+                    console.log(`[Cache] Loading for ${tableName} already in progress, waiting...`);
+                    return isTableLoading[tableName];
                 }
 
                 // 2. Skip if cached and not forced
                 if (!force && cachedData[tableName] && cachedData[tableName].length > 0) {
                     console.log(`[Cache] Using cached data for ${tableName}`);
                     runGenericFilter(tableName);
-                    return;
+                    return Promise.resolve();
                 }
 
-                isTableLoading[tableName] = true;
                 let retryCount = 0;
-
                 const executeFetch = async () => {
                     try {
                         const token = await getToken();
+                        console.log(`[Graph] Fetching ${tableName}...`);
                         const res = await fetch(`${resolvedGraphBaseUrl}/tables/${tableName}/rows`, {
                             headers: { "Authorization": `Bearer ${token}` }
                         });
@@ -1813,7 +1815,6 @@
                                 await new Promise(resolve => setTimeout(resolve, delay));
                                 return await executeFetch();
                             }
-
                             const errBody = await res.json().catch(() => ({}));
                             console.error(`Erreur chargement ${tableName}:`, errBody);
                             throw new Error(`Erreur ${res.status}: ${errBody.error?.message || 'Inconnue'}`);
@@ -1825,18 +1826,20 @@
                             return row;
                         });
 
-                        console.log(`[Success] Data loaded for ${tableName}`);
+                        console.log(`[Success] Data loaded for ${tableName} (${cachedData[tableName].length} rows)`);
                         runGenericFilter(tableName);
 
                     } catch (err) {
                         console.error(`[Error] ${tableName}:`, err);
                         showToast(`Erreur (${tableName}): ` + err.message, "error");
-                    } finally {
-                        delete isTableLoading[tableName];
+                        throw err;
                     }
                 };
 
-                await executeFetch();
+                isTableLoading[tableName] = executeFetch().finally(() => {
+                    delete isTableLoading[tableName];
+                });
+                return isTableLoading[tableName];
             }
 
             function renderTable(tableName, rows) {
@@ -1845,7 +1848,11 @@
                 const head = document.getElementById(`table-head-${suffix}`);
                 const body = document.getElementById(`table-body-${suffix}`);
 
-                if (!head || !body) return;
+                console.log(`[UI] Rendering table ${tableName} (Suffix: ${suffix})`);
+                if (!head || !body) {
+                    console.error(`[UI] Elements not found for suffix ${suffix}: head=${!!head}, body=${!!body}`);
+                    return;
+                }
 
                 // Header
                 const sortState = sortStates[tableName] || {};
@@ -2308,9 +2315,10 @@
             }
 
             function renderCalendar(tableName, rows) {
+                const suffix = normalizeStr(tableName.split('_')[1]);
+                console.log(`[UI] Rendering calendar ${tableName} (Suffix: ${suffix})`);
                 renderCalendarGrid(tableName); // Always render grid structure first
 
-                const suffix = normalizeStr(tableName.split('_')[1]);
                 const entriesLayer = document.getElementById(`calendar-entries-layer-${suffix}`);
                 const clientFilter = document.getElementById(`filter-${suffix}-client`)?.value;
                 if (!entriesLayer) return;
@@ -2947,11 +2955,24 @@
                 document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('tab-active'));
                 const suffix = tabId.replace('tab-', '');
                 const btnId = 'btn-' + suffix;
-                if (document.getElementById(btnId)) {
-                    document.getElementById(btnId).classList.add('tab-active');
+                const btn = document.getElementById(btnId);
+                if (btn) btn.classList.add('tab-active');
+
+                // 2. Set default date to Monday of the current week if tab-planning is opened and filter is empty
+                if (tabId === 'tab-planning') {
+                    const dateFilter = document.getElementById('filter-planning-date');
+                    if (dateFilter && !dateFilter.value) {
+                        const today = new Date();
+                        const day = today.getDay() || 7; // 1=Mon .. 7=Sun
+                        const monday = new Date(today);
+                        monday.setDate(today.getDate() - day + 1);
+                        const fmt = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+                        dateFilter.value = fmt;
+                        console.log(`[UI] Set default date for Planning: ${fmt}`);
+                    }
                 }
 
-                // Populate filters for the new tab
+                // 3. Detect Table Name
                 const tableName = Object.keys(TABLE_CONFIG).find(k => {
                     const normK = normalizeStr(k);
                     if (suffix === 'prospection') return normK.includes('prospection');
@@ -2966,22 +2987,7 @@
                         populateTabFilters(tableName, suffix);
                     });
                 } else if (suffix === 'ramasses') {
-                    // Specific case fallback if TABLE_CONFIG is missing key
                     loadTableData('T_Ramasses').then(() => populateTabFilters('T_Ramasses', 'ramasses'));
-                }
-
-                // 2. Set default date to Monday of the current week if tab-planning is opened and filter is empty
-                if (tabId === 'tab-planning') {
-                    const dateFilter = document.getElementById('filter-planning-date');
-                    if (dateFilter && !dateFilter.value) {
-                        const today = new Date();
-                        const day = today.getDay() || 7; // 1=Mon .. 7=Sun
-                        const monday = new Date(today);
-                        monday.setDate(today.getDate() - day + 1);
-                        const fmt = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
-                        dateFilter.value = fmt;
-                        // The loaded table data will naturally trigger `runGenericFilter` to apply this new date.
-                    }
                 }
 
                 if (tabId === 'tab-reporting-client') {
