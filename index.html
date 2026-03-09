@@ -337,7 +337,7 @@
 
 
                 <!-- TAB: Ramasses -->
-                <div id="tab-ramasses" class="tab-pane space-y-2">
+                <div id="tab-ramasses" class="tab-pane hidden space-y-2">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 px-1">
                         <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
                             <h2 class="text-lg font-black text-slate-900 whitespace-nowrap">Ramasses</h2>
@@ -387,7 +387,7 @@
 
 
                 <!-- TAB: Clients -->
-                <div id="tab-clients" class="tab-pane space-y-2">
+                <div id="tab-clients" class="tab-pane hidden space-y-2">
                     <!-- CLIENT LIST VIEW -->
                     <div id="clients-list-view" class="space-y-2">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 px-1">
@@ -582,7 +582,7 @@
                     </div>
 
                     <!-- TAB: Prospection -->
-                    <div id="tab-prospection" class="tab-pane space-y-2">
+                    <div id="tab-prospection" class="tab-pane hidden space-y-2">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 px-1">
                             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
                                 <h2 class="text-lg font-black text-slate-900">Prospection</h2>
@@ -629,7 +629,7 @@
 
 
                     <!-- TAB: Facturation -->
-                    <div id="tab-facturation" class="tab-pane space-y-2">
+                    <div id="tab-facturation" class="tab-pane hidden space-y-2">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 px-1">
                             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
                                 <h2 class="text-lg font-black text-slate-900">Facturation & Règlements</h2>
@@ -665,7 +665,7 @@
 
 
                     <!-- TAB: Reporting Client -->
-                    <div id="tab-reporting-client" class="tab-pane space-y-4 print:space-y-6">
+                    <div id="tab-reporting-client" class="tab-pane hidden space-y-4 print:space-y-6">
                         <div
                             class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-1 print:hidden">
                             <div class="flex flex-wrap items-center gap-4 w-full md:w-auto">
@@ -848,7 +848,7 @@
 
 
                     <!-- TAB: Production -->
-                    <div id="tab-production" class="tab-pane space-y-2">
+                    <div id="tab-production" class="tab-pane hidden space-y-2">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 px-1">
                             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
                                 <h2 class="text-lg font-black text-slate-900">Production</h2>
@@ -895,7 +895,7 @@
 
 
                     <!-- TAB: Départs -->
-                    <div id="tab-departs" class="tab-pane space-y-2">
+                    <div id="tab-departs" class="tab-pane hidden space-y-2">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 px-1">
                             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
                                 <h2 class="text-lg font-black text-slate-900">Départs</h2>
@@ -937,7 +937,7 @@
 
 
                     <!-- TAB: Incidents -->
-                    <div id="tab-incidents" class="tab-pane space-y-2">
+                    <div id="tab-incidents" class="tab-pane hidden space-y-2">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 px-1">
                             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
                                 <h2 class="text-lg font-black text-slate-900">Incidents</h2>
@@ -984,7 +984,7 @@
 
 
                     <!-- TAB: Semaine Type (Calendar) -->
-                    <div id="tab-semaine" class="tab-pane space-y-2">
+                    <div id="tab-semaine" class="tab-pane hidden space-y-2">
                         <div class="flex justify-between items-center px-1">
                             <div class="flex items-center gap-4">
                                 <h2 class="text-lg font-black text-slate-900">Agenda Semaine Type</h2>
@@ -1061,7 +1061,7 @@
 
 
                     <!-- TAB: Planning -->
-                    <div id="tab-planning" class="tab-pane space-y-2">
+                    <div id="tab-planning" class="tab-pane hidden space-y-2">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 px-1">
                             <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
                                 <h2 class="text-lg font-black text-slate-900">Planning Interventions</h2>
@@ -1161,7 +1161,7 @@
 
 
                 <!-- TAB: Paramètres -->
-                <div id="tab-parametres" class="tab-pane space-y-6">
+                <div id="tab-parametres" class="tab-pane hidden space-y-6">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
                         <div class="flex flex-wrap items-center gap-2">
                             <button onclick="switchSettingsTable('T_MP')" id="btn-setting-mp"
@@ -1321,7 +1321,7 @@
                     const clientFilter = document.getElementById(`filter-${suffix}-client`)?.value;
                     const matiereFilter = document.getElementById(`filter-${suffix}-matiere`)?.value;
 
-                    console.log(`[DEBUG] Filters for ${suffix}: date=${dateFilter}, client=${clientFilter}, matiere=${matiereFilter}`);
+
 
                     let rows = cachedData[tableName];
 
@@ -1382,11 +1382,11 @@
                         rows = rows.filter(r => r.values[0].some(v => normalizeStr(String(v)).includes(normSearch)));
                     }
 
-                    console.log(`[DEBUG] Final rows to render for ${tableName}: ${rows.length}`);
+
                     if (['T_SmnType', 'T_Planning'].includes(tableName)) renderCalendar(tableName, rows);
                     else renderTable(tableName, rows);
                 } catch (err) {
-                    console.error(`[CRITICAL] runGenericFilter failed for ${tableName}:`, err);
+
                 }
             }
 
@@ -1724,13 +1724,13 @@
 
                     resolvedGraphBaseUrl = `https://graph.microsoft.com/v1.0/sites/${siteData.id}/drive/items/${file.id}/workbook`;
                     resolvedDriveBaseUrl = `https://graph.microsoft.com/v1.0/sites/${siteData.id}/drive`;
-                    console.log("Graph URL:", resolvedGraphBaseUrl);
+
 
                     // Debug Tables
                     const tablesRes = await fetch(`${resolvedGraphBaseUrl}/tables`, { headers: { "Authorization": `Bearer ${token}` } });
                     if (tablesRes.ok) {
                         const tablesData = await tablesRes.json();
-                        console.log("Tables disponibles dans Excel:", tablesData.value.map(t => t.name));
+
                     }
                 } catch (err) {
                     showToast("Erreur SharePoint: " + err.message, "error");
@@ -1892,10 +1892,10 @@
                     `;
                             body.appendChild(tr);
                         } catch (rowErr) {
-                            console.error(`[ERROR] Failed to render row ${rowIdx} for ${tableName}:`, rowErr);
+
                         }
                     });
-                    console.log(`[DEBUG] Rendered ${body.children.length} rows for ${tableName}. HTML length: ${body.innerHTML.length}. Content: ${body.innerHTML.substring(0, 100)}...`);
+
 
                 } catch (err) {
                     console.error(`[CRITICAL] renderTable failed for ${tableName}:`, err);
@@ -2299,7 +2299,7 @@
             function renderCalendar(tableName, rows) {
                 try {
                     const suffix = normalizeStr(tableName.split('_')[1]);
-                    console.log(`[UI] Rendering calendar ${tableName} (Suffix: ${suffix}, Rows: ${rows?.length || 0})`);
+
                     renderCalendarGrid(tableName); // Always render grid structure first
 
                     const entriesLayer = document.getElementById(`calendar-entries-layer-${suffix}`);
@@ -2311,7 +2311,7 @@
 
                     entriesLayer.innerHTML = '';
                     if (!rows || rows.length === 0) {
-                        console.log(`[DEBUG] No rows in calendar for ${tableName}`);
+
                         return;
                     }
 
@@ -2402,6 +2402,7 @@
                             entriesLayer.appendChild(card);
                         });
                     });
+
                 } catch (err) {
                 }
             }
@@ -2928,7 +2929,8 @@
                 if (overlay) overlay.classList.add("hidden");
                 if (appContent) appContent.classList.remove("hidden");
 
-                targetTab.scrollIntoView({ behavior: 'smooth' });
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
+                targetTab.classList.remove('hidden');
 
                 document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('tab-active'));
                 const suffix = tabId.replace('tab-', '');
