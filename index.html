@@ -193,20 +193,29 @@
                 box-shadow: none !important;
             }
 
-            .tab-pane {
-                display: block !important;
-            }
-
-            .tab-pane:not(#tab-reporting-client) {
+        @media print {
+            .tab-pane, 
+            aside, 
+            nav, 
+            header, 
+            #crud-modal, 
+            #export-planning-modal, 
+            #toast-container,
+            button,
+            .shadow-sm,
+            .ring-1,
+            #app-content > div:not(#temp-print-div) {
                 display: none !important;
             }
 
             body {
                 background: white !important;
+                margin: 0;
+                padding: 0;
             }
 
             /* Custom Planning Print Styles */
-            #temp-print-area {
+            #temp-print-div {
                 display: block !important;
                 position: absolute;
                 top: 0;
@@ -1113,9 +1122,9 @@
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-2 shrink-0">
-                            <button onclick="loadTableData('T_Planning')"
+                            <button onclick="loadTableData('T_Planning', true)"
                                 class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                                title="Rafraîchir">
+                                title="Forcer le rafraîchissement">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
@@ -1323,6 +1332,49 @@
                     class="flex-[2] px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-xl shadow-blue-100 transition-all active:scale-95 flex justify-center items-center gap-2">
                     Enregistrer
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXPORT PLANNING MODAL -->
+    <div id="export-planning-modal" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeExportModal()"></div>
+        <div
+            class="bg-white w-full max-w-md rounded-[32px] shadow-2xl relative z-10 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div class="p-6 border-b border-slate-50 flex justify-between items-center">
+                <h2 class="text-xl font-black text-slate-900">Exporter le Planning</h2>
+                <button onclick="closeExportModal()" class="p-2 hover:bg-slate-50 rounded-xl text-slate-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Jour à
+                        exporter</label>
+                    <input type="date" id="export-planning-date"
+                        class="w-full bg-slate-50 border-0 ring-1 ring-slate-100 focus:ring-2 focus:ring-blue-500 rounded-2xl px-4 py-3 text-sm font-bold outline-none text-slate-700">
+                </div>
+                <div>
+                    <label
+                        class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Équipe</label>
+                    <select id="export-planning-equipe"
+                        class="w-full bg-slate-50 border-0 ring-1 ring-slate-100 focus:ring-2 focus:ring-blue-500 rounded-2xl px-4 py-3 text-sm font-bold outline-none text-slate-700">
+                        <option value="">Toutes les équipes</option>
+                        <option value="Equipe 1">Equipe 1</option>
+                        <option value="Equipe 2">Equipe 2</option>
+                        <option value="Equipe 3">Equipe 3</option>
+                    </select>
+                </div>
+            </div>
+            <div class="p-6 bg-slate-50/50 flex gap-3">
+                <button onclick="closeExportModal()"
+                    class="flex-1 px-4 py-3 bg-white hover:bg-slate-100 text-slate-600 font-bold rounded-2xl border border-slate-200 transition-all text-sm">Annuler</button>
+                <button onclick="confirmExportPlanningPDF()"
+                    class="flex-[2] px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-100 transition-all text-sm">Générer
+                    PDF</button>
             </div>
         </div>
     </div>
@@ -2863,6 +2915,14 @@
                     values.push(val);
                 }
 
+                // Auto-sync Day for Planning
+                if (tableName === 'T_Planning' && values[7]) {
+                    const dateVal = values[7];
+                    const d = (typeof dateVal === 'number') ? new Date((dateVal - 25569) * 86400000) : new Date(dateVal + 'T12:00:00');
+                    const daysArr = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+                    values[1] = daysArr[d.getDay()];
+                }
+
                 let res;
                 if (rowIndex === null) {
                     res = await fetch(`${resolvedGraphBaseUrl}/tables/${tableName}/rows`, {
@@ -3277,14 +3337,30 @@
             window.print();
         }
 
-        async function exportPlanningPDF() {
+        function exportPlanningPDF() {
             const dateVal = document.getElementById('filter-planning-date').value;
             const selectedEquipe = document.getElementById('filter-planning-equipe').value;
+            
+            document.getElementById('export-planning-date').value = dateVal;
+            document.getElementById('export-planning-equipe').value = selectedEquipe;
+            
+            document.getElementById('export-planning-modal').classList.remove('hidden');
+        }
+
+        function closeExportModal() {
+            document.getElementById('export-planning-modal').classList.add('hidden');
+        }
+
+        async function confirmExportPlanningPDF() {
+            const dateVal = document.getElementById('export-planning-date').value;
+            const selectedEquipe = document.getElementById('export-planning-equipe').value;
 
             if (!dateVal) {
                 showToast("Veuillez sélectionner une date.", "error");
                 return;
             }
+
+            closeExportModal();
 
             if (!cachedData['T_Planning']) await loadTableData('T_Planning');
 
@@ -3309,7 +3385,7 @@
 
             const equipes = selectedEquipe ? [selectedEquipe] : ['Equipe 1', 'Equipe 2', 'Equipe 3'];
 
-            let printHtml = `<div id="temp-print-area">`;
+            let printHtml = `<div id="temp-print-div">`;
             printHtml += `<h1 style="font-size: 24px; font-weight: 900; text-align: center; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 0.1em; color: #0f172a; border-bottom: 4px solid #2563eb; padding-bottom: 15px;">Planning des Interventions - ${new Date(dateVal).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</h1>`;
 
             equipes.forEach((eq, idx) => {
@@ -3373,6 +3449,10 @@
 
             const originalTitle = document.title;
             document.title = `Planning_${dateVal}_${selectedEquipe || 'Toutes_Equipes'}`;
+
+        window.onload = initAuth;
+
+
 
             window.print();
 
