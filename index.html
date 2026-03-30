@@ -204,6 +204,32 @@
             body {
                 background: white !important;
             }
+
+            /* Custom Planning Print Styles */
+            #temp-print-area {
+                display: block !important;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                background: white;
+                z-index: 9999;
+                padding: 40px;
+            }
+
+            .page-break {
+                page-break-before: always;
+                break-before: page;
+            }
+
+            table {
+                page-break-inside: auto;
+            }
+
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
         }
     </style>
 </head>
@@ -1068,6 +1094,13 @@
                                     class="bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-lg px-2 py-1 text-[10px] font-bold outline-none text-slate-600">
                                     <option value="">Client: Tous</option>
                                 </select>
+                                <select id="filter-planning-equipe" onchange="runGenericFilter('T_Planning')"
+                                    class="bg-white border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 rounded-lg px-2 py-1 text-[10px] font-bold outline-none text-slate-600">
+                                    <option value="">Equipe: Toutes</option>
+                                    <option value="Equipe 1">Equipe 1</option>
+                                    <option value="Equipe 2">Equipe 2</option>
+                                    <option value="Equipe 3">Equipe 3</option>
+                                </select>
                             </div>
                             <div class="relative w-48">
                                 <input type="text" placeholder="Rechercher..."
@@ -1104,6 +1137,15 @@
                                         d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
                                 Intervention
+                            </button>
+                            <button onclick="exportPlanningPDF()"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-50 transition-all active:scale-95 text-xs shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                                    </path>
+                                </svg>
+                                Exporter PDF
                             </button>
                         </div>
                     </div>
@@ -1310,9 +1352,12 @@
         function runGenericFilter(tableName, searchTerm = '') {
             try {
                 if (!cachedData[tableName]) return;
-                const suffix = normalizeStr(tableName.split('_')[1]); const dateFilter = document.getElementById(`filter-${suffix}-date`)?.value;
+                const suffix = normalizeStr(tableName.split('_')[1]);
+                const dateFilter = document.getElementById(`filter-${suffix}-date`)?.value;
                 const clientFilter = document.getElementById(`filter-${suffix}-client`)?.value;
-                const matiereFilter = document.getElementById(`filter-${suffix}-matiere`)?.value; let rows = cachedData[tableName];
+                const matiereFilter = document.getElementById(`filter-${suffix}-matiere`)?.value;
+                const equipeFilter = document.getElementById(`filter-${suffix}-equipe`)?.value;
+                let rows = cachedData[tableName];
 
                 if (tableName === 'T_Planning') {
                     let monday;
@@ -1364,6 +1409,10 @@
                 if (matiereFilter && (tableName === 'T_Ramasses' || tableName === 'T_Production')) {
                     const idx = tableName === 'T_Ramasses' ? 2 : 1;
                     rows = rows.filter(r => String(r.values[0][idx]) === matiereFilter);
+                }
+
+                if (equipeFilter && tableName === 'T_Planning') {
+                    rows = rows.filter(r => r.values[0][6] === equipeFilter);
                 }
 
                 if (searchTerm) {
@@ -2418,9 +2467,21 @@
                 let val = currentModalState.data ? currentModalState.data[i] : (col.default !== undefined ? col.default : '');
 
                 // Prefill from calendar click (only for SmnType)
-                if (prefill && tableName === 'T_SmnType') {
-                    if (col.name === 'Jour') val = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'][prefill.day];
+                if (prefill && (tableName === 'T_SmnType' || tableName === 'T_Planning')) {
                     if (col.name === 'Heure') val = `${String(prefill.hour).padStart(2, '0')}:00`;
+                    
+                    if (tableName === 'T_SmnType' && col.name === 'Jour') {
+                        val = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'][prefill.day];
+                    }
+                    
+                    if (tableName === 'T_Planning' && col.name === 'Date') {
+                        const dateFilter = document.getElementById('filter-planning-date').value;
+                        if (dateFilter) {
+                            const d = new Date(dateFilter + 'T12:00:00');
+                            d.setDate(d.getDate() + prefill.day);
+                            val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                        }
+                    }
                 }
 
                 // Robust Time Display (Excel serial to HH:MM)
@@ -3214,6 +3275,109 @@
             const date = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
             document.title = `${client}_${date}`;
             window.print();
+        }
+
+        async function exportPlanningPDF() {
+            const dateVal = document.getElementById('filter-planning-date').value;
+            const selectedEquipe = document.getElementById('filter-planning-equipe').value;
+
+            if (!dateVal) {
+                showToast("Veuillez sélectionner une date.", "error");
+                return;
+            }
+
+            if (!cachedData['T_Planning']) await loadTableData('T_Planning');
+
+            const selectedDate = new Date(dateVal + 'T12:00:00');
+            const excelDate = (selectedDate.getTime() / (1000 * 60 * 60 * 24)) + 25569;
+
+            let entries = (cachedData['T_Planning'] || []).filter(r => {
+                const rowDate = r.values[0][7];
+                if (!rowDate) return false;
+                const d = (typeof rowDate === 'number') ? rowDate : (new Date(String(rowDate).split('T')[0]).getTime() / 86400000 + 25569);
+                return Math.floor(d) === Math.floor(excelDate);
+            });
+
+            if (selectedEquipe) {
+                entries = entries.filter(r => r.values[0][6] === selectedEquipe);
+            }
+
+            if (entries.length === 0) {
+                showToast("Aucune intervention à exporter pour cette date/équipe.", "warning");
+                return;
+            }
+
+            const equipes = selectedEquipe ? [selectedEquipe] : ['Equipe 1', 'Equipe 2', 'Equipe 3'];
+
+            let printHtml = `<div id="temp-print-area">`;
+            printHtml += `<h1 style="font-size: 24px; font-weight: 900; text-align: center; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 0.1em; color: #0f172a; border-bottom: 4px solid #2563eb; padding-bottom: 15px;">Planning des Interventions - ${new Date(dateVal).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</h1>`;
+
+            equipes.forEach((eq, idx) => {
+                const eqEntries = entries.filter(r => r.values[0][6] === eq);
+                if (eqEntries.length === 0 && !selectedEquipe) return;
+
+                printHtml += `<div class="${idx > 0 ? 'page-break' : ''}" style="margin-bottom: 40px;">`;
+                printHtml += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #0f172a; color: white; padding: 15px; border-radius: 12px;">`;
+                printHtml += `<h2 style="font-size: 18px; font-weight: 900; margin: 0; text-transform: uppercase; letter-spacing: 0.05em;">${eq}</h2>`;
+                printHtml += `<span style="font-size: 12px; font-weight: 700; opacity: 0.8;">${eqEntries.length} intervention(s)</span>`;
+                printHtml += `</div>`;
+
+                if (eqEntries.length === 0) {
+                    printHtml += `<p style="text-align: center; padding: 30px; color: #94a3b8; font-style: italic;">Aucune intervention prévue.</p>`;
+                } else {
+                    eqEntries.sort((a, b) => (a.values[0][2] || 0) - (b.values[0][2] || 0));
+
+                    printHtml += `<table style="width: 100%; border-collapse: collapse;">`;
+                    printHtml += `<thead><tr style="background: #f8fafc; color: #64748b; text-transform: uppercase; font-size: 10px; font-weight: 900; letter-spacing: 0.1em; border-bottom: 2px solid #e2e8f0;">
+                        <th style="padding: 12px; text-align: left; width: 80px;">Heure</th>
+                        <th style="padding: 12px; text-align: left;">Client</th>
+                        <th style="padding: 12px; text-align: left;">Matière</th>
+                        <th style="padding: 12px; text-align: center; width: 60px;">Ordre</th>
+                    </tr></thead>`;
+                    printHtml += `<tbody>`;
+
+                    eqEntries.forEach(r => {
+                        const vals = r.values[0];
+                        let timeStr = vals[2];
+                        if (typeof timeStr === 'number') {
+                            const totalMinutes = Math.round(timeStr * 1440);
+                            const h = Math.floor(totalMinutes / 60);
+                            const m = totalMinutes % 60;
+                            timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                        }
+
+                        const clientId = vals[3];
+                        const clientName = (cachedData['T_Clients'] || []).find(c => c.values[0][0] == clientId)?.values[0][1] || `Client #${clientId}`;
+                        const matiere = vals[4] || '-';
+                        const ordre = vals[5] || '1';
+
+                        printHtml += `<tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 12px; font-weight: 900; color: #2563eb;">${timeStr}</td>
+                            <td style="padding: 12px; font-weight: 700; color: #334155;">${clientName}</td>
+                            <td style="padding: 12px; color: #64748b;">${matiere}</td>
+                            <td style="padding: 12px; text-align: center; font-weight: 700; color: #94a3b8;">${ordre}</td>
+                        </tr>`;
+                    });
+
+                    printHtml += `</tbody></table>`;
+                }
+                printHtml += `</div>`;
+            });
+
+            printHtml += `</div>`;
+
+            const printDiv = document.createElement('div');
+            printDiv.id = 'temp-print-div';
+            printDiv.innerHTML = printHtml;
+            document.body.appendChild(printDiv);
+
+            const originalTitle = document.title;
+            document.title = `Planning_${dateVal}_${selectedEquipe || 'Toutes_Equipes'}`;
+
+            window.print();
+
+            document.body.removeChild(printDiv);
+            document.title = originalTitle;
         }
 
         window.onload = initAuth;
