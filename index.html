@@ -491,6 +491,17 @@
                                 <p id="detail-client-group"
                                     class="text-sm text-slate-400 font-bold uppercase tracking-widest"></p>
                             </div>
+
+                            <!-- Refresh Button -->
+                            <button onclick="refreshClientDetailContent()"
+                                class="ml-auto p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                                title="Actualiser les données">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                    </path>
+                                </svg>
+                            </button>
                         </div>
 
                         <div class="h-[calc(100vh-220px)] overflow-y-auto no-scrollbar pr-2 pb-6 space-y-4">
@@ -2083,6 +2094,36 @@
             document.getElementById("clients-list-view").classList.remove("hidden");
             currentDetailClientName = null;
             currentDetailClientIdx = null;
+        }
+
+        async function refreshClientDetailContent() {
+            if (currentDetailClientIdx === null || !currentDetailClientName) return;
+
+            showToast("Actualisation des données client...", "info");
+
+            try {
+                // Refresh all major tables
+                await Promise.all([
+                    loadTableData('T_Clients', true),
+                    loadTableData('T_Ramasses', true),
+                    loadTableData('T_Prospection', true),
+                    loadTableData('T_Facturation', true)
+                ]);
+
+                // Find the new index of the client in case rows moved/changed
+                const newIdx = (cachedData['T_Clients'] || []).findIndex(r => r.values[0][1] === currentDetailClientName);
+                
+                if (newIdx !== -1) {
+                    currentDetailClientIdx = newIdx;
+                    loadClientDetailData(newIdx);
+                    showToast("Données actualisées", "success");
+                } else {
+                    closeClientDetail();
+                    showToast("Client introuvable après actualisation", "warning");
+                }
+            } catch (err) {
+                showToast("Erreur lors de l'actualisation : " + err.message, "error");
+            }
         }
 
         async function loadClientDetailData(rowIndex) {
