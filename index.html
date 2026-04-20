@@ -2558,19 +2558,10 @@
 
                 if (col.type === 'checkbox') {
                     const isChecked = val === true || val === 'VRAI' || val === 'TRUE';
-                    input = `<div class="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl ring-1 ring-slate-200">
-                                <input type="checkbox" name="col_${i}" ${isChecked ? 'checked' : ''} class="w-5 h-5 text-blue-600 rounded-lg border-slate-300 focus:ring-blue-500">
-                                <span class="text-sm font-bold text-slate-600">Activé / Vrai</span>
+                    input = `<div class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl ring-1 ring-slate-200">
+                                <input type="checkbox" name="col_${i}" ${isChecked ? 'checked' : ''} class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                                <span class="text-xs font-bold text-slate-600">Activé / Vrai</span>
                              </div>`;
-                } else if (col.options) {
-                    // Manual options
-                    input = `<select name="col_${i}" class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700">
-                                ${col.options.map(o => `<option value="${o}" ${o === val ? 'selected' : ''}>${o}</option>`).join('')}
-                             </select>`;
-                } else if (col.type === 'select') {
-                    input = `<select name="col_${i}" class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700">
-                                <option value="">Chargement...</option>
-                             </select>`;
                 } else if (col.type === 'select' && col.optionsTable === 'T_Clients') {
                     // Searchable Client Select
                     input = `
@@ -2586,10 +2577,13 @@
                             </div>
                             <div id="searchable-client-suggestions-${i}" class="hidden absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-slate-100 z-[210] max-h-48 overflow-y-auto no-scrollbar"></div>
                         </div>`;
+                } else if (col.options || col.type === 'select') {
+                    input = `<select name="col_${i}" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-[11px] appearance-none cursor-pointer">
+                                <option value="">Chargement...</option>
+                             </select>`;
                 } else if (col.type === 'textarea') {
                     input = `<textarea name="col_${i}" rows="3" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-[11px]">${val}</textarea>`;
                 } else if (col.type === 'date') {
-                    // Convert Excel serial to YYYY-MM-DD for input[type=date] if editing
                     let dateStr = '';
                     const fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                     if (val && !isNaN(val)) {
@@ -2601,11 +2595,6 @@
                         dateStr = val;
                     }
                     input = `<input type="date" name="col_${i}" value="${dateStr}" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-[11px]">`;
-                } else if (col.options || col.type === 'select') {
-                    // Combined select handling for cleaner UI
-                    input = `<select name="col_${i}" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-[11px] appearance-none cursor-pointer">
-                                <option value="">Chargement...</option>
-                             </select>`;
                 } else {
                     input = `<input type="${col.type}" name="col_${i}" value="${val}" ${col.readonly ? 'readonly' : ''} placeholder="${col.placeholder || ''}" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-[11px] ${col.readonly ? 'opacity-50' : ''}">`;
                 }
