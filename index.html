@@ -1299,7 +1299,7 @@
     <div id="crud-modal" class="hidden fixed inset-0 z-[150] flex items-center justify-center p-4">
         <div class="modal-overlay absolute inset-0" onclick="closeModal()"></div>
         <div
-            class="bg-white w-full max-w-2xl rounded-[32px] shadow-2xl relative z-10 flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
+            class="bg-white w-full max-w-5xl rounded-[32px] shadow-2xl relative z-10 flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
             <!-- Modal Header -->
             <div class="p-8 border-b border-slate-50 flex justify-between items-center">
                 <div>
@@ -2508,7 +2508,7 @@
 
             const form = document.getElementById("dynamic-form");
             form.innerHTML = '';
-            form.className = "grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4";
+            form.className = "grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4";
 
             for (let i = 0; i < config.cols.length; i++) {
                 const col = config.cols[i];
@@ -2519,20 +2519,24 @@
                 let val = currentModalState.data ? currentModalState.data[i] : (col.default !== undefined ? col.default : '');
 
                 // Prefill from calendar click (only for SmnType)
-                if (prefill && (tableName === 'T_SmnType' || tableName === 'T_Planning')) {
-                    if (col.name === 'Heure') val = `${String(prefill.hour).padStart(2, '0')}:00`;
+                if (prefill) {
+                    if (prefill.hour !== undefined) val = `${String(prefill.hour).padStart(2, '0')}:00`;
                     
-                    if (tableName === 'T_SmnType' && col.name === 'Jour') {
+                    if (tableName === 'T_SmnType' && col.name === 'Jour' && prefill.day !== undefined) {
                         val = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'][prefill.day];
                     }
                     
-                    if (tableName === 'T_Planning' && col.name === 'Date') {
+                    if (tableName === 'T_Planning' && col.name === 'Date' && prefill.day !== undefined) {
                         const dateFilter = document.getElementById('filter-planning-date').value;
                         if (dateFilter) {
                             const d = new Date(dateFilter + 'T12:00:00');
                             d.setDate(d.getDate() + prefill.day);
                             val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                         }
+                    }
+
+                    if (prefill.client && (col.name === 'Client' || col.name === 'N° Client')) {
+                        val = prefill.client;
                     }
                 }
 
@@ -2567,8 +2571,23 @@
                     input = `<select name="col_${i}" class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700">
                                 <option value="">Chargement...</option>
                              </select>`;
+                } else if (col.type === 'select' && col.optionsTable === 'T_Clients') {
+                    // Searchable Client Select
+                    input = `
+                        <div class="relative group/searchable" id="searchable-client-container-${i}">
+                            <div class="flex items-center bg-slate-50 ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-blue-500 rounded-xl px-3 py-2.5 transition-all">
+                                <input type="text" id="searchable-client-input-${i}" placeholder="Rechercher un client..." 
+                                    class="w-full text-[11px] font-bold outline-none text-slate-700 bg-transparent"
+                                    onfocus="showModalClientSuggestions(${i})"
+                                    onkeyup="filterModalClientSuggestions(${i}, this.value)"
+                                    value="${val}">
+                                <input type="hidden" name="col_${i}" value="${val}">
+                                <svg class="w-3.5 h-3.5 text-slate-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                            <div id="searchable-client-suggestions-${i}" class="hidden absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-slate-100 z-[210] max-h-48 overflow-y-auto no-scrollbar"></div>
+                        </div>`;
                 } else if (col.type === 'textarea') {
-                    input = `<textarea name="col_${i}" rows="3" class="w-full bg-slate-50 border-0 p-4 rounded-2xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-700">${val}</textarea>`;
+                    input = `<textarea name="col_${i}" rows="3" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-[11px]">${val}</textarea>`;
                 } else if (col.type === 'date') {
                     // Convert Excel serial to YYYY-MM-DD for input[type=date] if editing
                     let dateStr = '';
@@ -2581,14 +2600,14 @@
                     } else {
                         dateStr = val;
                     }
-                    input = `<input type="date" name="col_${i}" value="${dateStr}" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm">`;
+                    input = `<input type="date" name="col_${i}" value="${dateStr}" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-[11px]">`;
                 } else if (col.options || col.type === 'select') {
                     // Combined select handling for cleaner UI
-                    input = `<select name="col_${i}" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm appearance-none cursor-pointer">
+                    input = `<select name="col_${i}" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-[11px] appearance-none cursor-pointer">
                                 <option value="">Chargement...</option>
                              </select>`;
                 } else {
-                    input = `<input type="${col.type}" name="col_${i}" value="${val}" ${col.readonly ? 'readonly' : ''} placeholder="${col.placeholder || ''}" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm ${col.readonly ? 'opacity-50' : ''}">`;
+                    input = `<input type="${col.type}" name="col_${i}" value="${val}" ${col.readonly ? 'readonly' : ''} placeholder="${col.placeholder || ''}" class="w-full bg-slate-50 border-0 p-3 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-[11px] ${col.readonly ? 'opacity-50' : ''}">`;
                 }
 
                 wrapper.innerHTML = label + input;
@@ -2597,10 +2616,12 @@
                 // Populate selects
                 if (col.type === 'select') {
                     const select = wrapper.querySelector('select');
-                    if (col.optionsTable) {
-                        populateSelect(select, col.optionsTable, col.optionLabelIndex, val);
-                    } else if (col.options) {
-                        select.innerHTML = col.options.map(opt => `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`).join('');
+                    if (select) {
+                        if (col.optionsTable) {
+                            populateSelect(select, col.optionsTable, col.optionLabelIndex, val);
+                        } else if (col.options) {
+                            select.innerHTML = col.options.map(opt => `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`).join('');
+                        }
                     }
                 }
 
@@ -3217,11 +3238,61 @@
 
         // Close suggestions on click outside
         document.addEventListener('click', (e) => {
-            const container = document.getElementById("rep-client-search-container");
-            if (container && !container.contains(e.target)) {
+            const repContainer = document.getElementById("rep-client-search-container");
+            if (repContainer && !repContainer.contains(e.target)) {
                 document.getElementById("rep-client-suggestions").classList.add("hidden");
             }
+
+            // Also close modal client suggestions
+            const modalSugg = document.querySelector('[id^="searchable-client-suggestions-"]:not(.hidden)');
+            if (modalSugg) {
+                const index = modalSugg.id.split('-').pop();
+                const container = document.getElementById(`searchable-client-container-${index}`);
+                if (container && !container.contains(e.target)) {
+                    modalSugg.classList.add("hidden");
+                }
+            }
         });
+
+        /**
+         * MODAL SEARCHABLE CLIENT LOGIC
+         */
+        function showModalClientSuggestions(index) {
+            const sugg = document.getElementById(`searchable-client-suggestions-${index}`);
+            sugg.classList.remove("hidden");
+            filterModalClientSuggestions(index, document.getElementById(`searchable-client-input-${index}`).value);
+        }
+
+        function filterModalClientSuggestions(index, val) {
+            const sugg = document.getElementById(`searchable-client-suggestions-${index}`);
+            const normVal = normalizeStr(val);
+            
+            if (!cachedData['T_Clients']) return;
+            const list = cachedData['T_Clients'].map(r => ({
+                id: r.values[0][0],
+                name: r.values[0][1]
+            })).sort((a, b) => a.name.localeCompare(b.name));
+
+            const filtered = list.filter(c => normalizeStr(c.name).includes(normVal));
+
+            if (filtered.length === 0) {
+                sugg.innerHTML = '<div class="px-4 py-6 text-center text-slate-400 italic text-[10px]">Aucun client trouvé</div>';
+            } else {
+                sugg.innerHTML = filtered.map(c => `
+                        <div onclick="selectModalClient(${index}, '${c.name.replace(/'/g, "\\'")}', '${c.id}')" class="px-4 py-2.5 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors">
+                            <div class="text-[11px] font-bold text-slate-700">${c.name}</div>
+                            <div class="text-[9px] text-slate-400 font-medium">#${c.id}</div>
+                        </div>
+                    `).join('');
+            }
+        }
+
+        function selectModalClient(index, name, id) {
+            document.getElementById(`searchable-client-input-${index}`).value = name;
+            const hidden = document.querySelector(`input[type="hidden"][name="col_${index}"]`);
+            if (hidden) hidden.value = name;
+            document.getElementById(`searchable-client-suggestions-${index}`).classList.add("hidden");
+        }
 
         function setQuickDateRange(range) {
             const startInput = document.getElementById("rep-client-start");
